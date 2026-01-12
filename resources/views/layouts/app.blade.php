@@ -21,7 +21,7 @@
 </head>
 
 <body class="font-sans antialiased">
-    <div class="min-h-screen bg-gray-100">
+    <div class="min-h-screen flex flex-col bg-[#FAF9F6]">
         @include('layouts.navigation')
 
         <!-- Page Heading -->
@@ -34,7 +34,7 @@
         @endisset
 
         <!-- Page Content -->
-        <main>
+        <main class="flex-1">
             {{ $slot }}
         </main>
     </div>
@@ -89,7 +89,7 @@
                     <div class="h-px w-10 bg-white/15 mt-4 mb-6"></div>
 
                     <ul class="space-y-4">
-                        @foreach ([['label' => 'Shop All', 'route' => route('shop.index')], ['label' => 'Official Site', 'route' => 'https://brif.cloud'], ['label' => 'How to Order', 'route' => route('how-to-order')], ['label' => 'Faq', 'route' => route('faq')]] as $item)
+                        @foreach ([['label' => 'Official Site', 'route' => 'https://brif.cloud'], ['label' => 'How to Order', 'route' => route('how-to-order')], ['label' => 'Faq', 'route' => route('faq')], ['label' => 'Voucher', 'route' => route('vouchers.index')], ] as $item)
                             <li>
                                 <a href="{{ $item['route'] }}"
                                     class="text-sm text-gray-300 hover:text-white transition relative inline-block
@@ -366,7 +366,7 @@
 
     @if ($popupBanner)
         <div id="popupBannerWrap" class="fixed inset-0 z-[9999] hidden items-center justify-center px-4">
-            <div class="absolute inset-0 bg-black/60"></div>
+            <div class="absolute inset-0 bg-black/60 pointer-events-none"></div>
 
             <div id="popupBannerCard"
                 class="relative w-full max-w-[520px] rounded-2xl overflow-hidden shadow-2xl border border-white/20

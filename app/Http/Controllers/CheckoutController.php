@@ -332,9 +332,17 @@ class CheckoutController extends Controller
 
 
         /**
-         * 9️⃣ 其他付款方式 → 回订单列表
+         * 9️⃣ 其他付款方式 → Checkout Success Page
          */
-        return redirect()->route('account.orders.index')
+        return redirect()
+            ->route('checkout.success', $order)
             ->with('success', 'Order placed successfully.');
+    }
+
+    public function success(Order $order)
+    {
+        abort_if($order->user_id !== auth()->id(), 403);
+
+        return view('checkout.success', compact('order'));
     }
 }

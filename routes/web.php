@@ -98,20 +98,13 @@ Route::post('/voucher/remove', [VoucherController::class, 'remove'])->name('vouc
 */
 Route::middleware('auth')->group(function () {
 
-
-    // Route::get('/cart/count', function () {
-    //     $count = auth()->user()?->cart?->items()?->count() ?? 0;
-
-    //     return response()->json([
-    //         'count' => $count,
-    //     ]);
-    // })->name('cart.count');
-
     // Checkout 也要登录
     Route::get('/checkout', [CheckoutController::class, 'index'])
         ->name('checkout.index');
     Route::post('/checkout/place-order', [CheckoutController::class, 'store'])
         ->name('checkout.store');
+    Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])
+        ->name('checkout.success');
 
     // Account 相关
     Route::prefix('account')->name('account.')->group(function () {

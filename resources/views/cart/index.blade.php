@@ -1,20 +1,79 @@
 <x-app-layout>
     <div class="bg-[#f7f7f9] min-h-screen py-6 sm:py-10">
         <div class="max-w-7xl5 mx-auto px-4 sm:px-6 lg:px-8">
+            {{-- Checkout Steps --}}
+            @php
+                // 你现在在哪一步：cart / checkout / complete
+                $step = $step ?? 'cart';
 
-            {{-- Breadcrumb --}}
-            <nav class="flex items-center uppercase space-x-2 text-sm text-gray-500 mb-6">
-                <a href="{{ route('home') }}" class="hover:text-[#8f6a10] transition-colors">Home</a>
-                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-                <span class="text-gray-900 font-medium">Shopping Cart</span>
-            </nav>
+                $steps = [
+                    ['key' => 'cart', 'label' => 'Shopping Cart'],
+                    ['key' => 'checkout', 'label' => 'Checkout'],
+                    ['key' => 'complete', 'label' => 'Order Complete'],
+                ];
+
+                $index = collect($steps)->search(fn($s) => $s['key'] === $step);
+            @endphp
+
+            <div class="bg-white/80 backdrop-blur rounded-2xl border border-gray-100 shadow-sm px-6 py-4 mb-8">
+                <div class="flex items-center justify-between gap-3">
+
+                    @foreach ($steps as $i => $s)
+                        @php
+                            $isDone = $i < $index;
+                            $isNow = $i === $index;
+                        @endphp
+
+                        <div class="flex items-center flex-1 min-w-0">
+                            {{-- Circle --}}
+                            <div class="flex items-center gap-3">
+                                <div
+                                    class="
+                        w-9 h-9 rounded-full grid place-items-center font-black text-sm
+                        {{ $isDone ? 'bg-[#D4AF37] text-white' : ($isNow ? 'bg-black text-white' : 'bg-gray-100 text-gray-400') }}
+                    ">
+                                    @if ($isDone)
+                                        ✓
+                                    @else
+                                        {{ $i + 1 }}
+                                    @endif
+                                </div>
+
+                                {{-- Label --}}
+                                <div class="min-w-0">
+                                    <div
+                                        class="
+                            text-sm font-extrabold truncate
+                            {{ $isNow ? 'text-gray-900' : ($isDone ? 'text-[#8f6a10]' : 'text-gray-400') }}
+                        ">
+                                        {{ $s['label'] }}
+                                    </div>
+
+                                    @if ($isNow)
+                                        <div class="text-[11px] text-gray-400 mt-0.5">
+                                            Current step
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            {{-- Connector --}}
+                            @if ($i < count($steps) - 1)
+                                <div
+                                    class="flex-1 h-px mx-4
+                        {{ $isDone ? 'bg-[#D4AF37]/70' : 'bg-gray-200' }}">
+                                </div>
+                            @endif
+                        </div>
+                    @endforeach
+
+                </div>
+            </div>
+
 
             @if ($items->isEmpty())
                 {{-- Empty State --}}
-                <section
-                    class="bg-white rounded-3xl border border-gray-100 shadow-sm p-12 text-center w-full ">
+                <section class="bg-white rounded-3xl border border-gray-100 shadow-sm p-12 text-center w-full ">
                     <div class="flex flex-col items-center">
                         <div class="w-20 h-20 rounded-full bg-[#D4AF37]/10 flex items-center justify-center mb-6">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-[#8f6a10]" fill="none"
