@@ -89,7 +89,7 @@
                     <div class="h-px w-10 bg-white/15 mt-4 mb-6"></div>
 
                     <ul class="space-y-4">
-                        @foreach ([['label' => 'Official Site', 'route' => 'https://brif.cloud'], ['label' => 'How to Order', 'route' => route('how-to-order')], ['label' => 'Faq', 'route' => route('faq')], ['label' => 'Voucher', 'route' => route('vouchers.index')], ] as $item)
+                        @foreach ([['label' => 'Official Site', 'route' => 'https://brif.cloud'], ['label' => 'How to Order', 'route' => route('how-to-order')], ['label' => 'Faq', 'route' => route('faq')], ['label' => 'Voucher', 'route' => route('vouchers.index')]] as $item)
                             <li>
                                 <a href="{{ $item['route'] }}"
                                     class="text-sm text-gray-300 hover:text-white transition relative inline-block
@@ -342,17 +342,116 @@
 
     @if (session('success'))
         <script>
-            Swal.fire({
-                icon: 'success',
-                title: '{{ session('success') }}',
-                toast: true,
-                position: 'bottom-right',
-                showConfirmButton: false,
-                timer: 2000,
-                timerProgressBar: true,
-            });
+            (function() {
+                const isMobile = window.matchMedia('(max-width: 640px)').matches;
+                const message = @json(session('success'));
+
+                if (!isMobile) {
+                    // 💻 Desktop：原本 SweetAlert toast
+                    Swal.fire({
+                        icon: 'success',
+                        title: message,
+                        toast: true,
+                        position: 'bottom-end',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true,
+                    });
+                } else {
+                    // 📱 Mobile：Bottom Snackbar
+                    const bar = document.createElement('div');
+                    bar.innerHTML = `
+                    <div class="fixed left-1/2 bottom-24 -translate-x-1/2 z-[9999]
+                                bg-black text-white
+                                px-5 py-3 rounded-full
+                                text-sm font-semibold
+                                shadow-xl
+                                flex items-center gap-2
+                                animate-[fadeUp_.25s_ease-out]">
+                        <span class="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
+                        ${message}
+                    </div>
+                `;
+
+                    document.body.appendChild(bar);
+
+                    setTimeout(() => {
+                        bar.remove();
+                    }, 2200);
+                }
+            })();
+        </script>
+
+        <style>
+            @keyframes fadeUp {
+                from {
+                    opacity: 0;
+                    transform: translate(-50%, 12px);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translate(-50%, 0);
+                }
+            }
+        </style>
+    @endif
+
+
+
+    @if (session('cart_added'))
+        <div id="cartAddedOverlay" class="fixed inset-0 z-[9999] flex items-center justify-center">
+
+            {{-- 背景遮罩 --}}
+            <div class="absolute inset-0 bg-black/40"></div>
+
+            {{-- 中间提示卡 --}}
+            <div
+                class="relative bg-white rounded-3xl shadow-2xl px-8 py-6 w-[90%] max-w-sm text-center
+                   animate-[fadeInUp_.25s_ease-out]">
+
+                <div
+                    class="mx-auto mb-4 w-14 h-14 rounded-full
+                        bg-[#D4AF37]/15 flex items-center justify-center">
+                    <svg class="w-7 h-7 text-[#8f6a10]" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
+
+                <h3 class="text-lg font-bold text-gray-900 mb-1">
+                    Added to cart
+                </h3>
+
+                <p class="text-sm text-gray-500 mb-6">
+                    Item has been added successfully
+                </p>
+
+                <div class="flex gap-3">
+                    <a href="{{ route('cart.index') }}"
+                        class="flex-1 py-3 rounded-full bg-[#D4AF37] text-white font-bold">
+                        View Cart
+                    </a>
+
+                    <button onclick="closeCartAdded()"
+                        class="flex-1 py-3 rounded-full border border-gray-200 text-gray-600 font-bold">
+                        Continue
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function closeCartAdded() {
+                document.getElementById('cartAddedOverlay')?.remove();
+            }
+
+            // 自动关闭（可调）
+            setTimeout(closeCartAdded, 3000);
         </script>
     @endif
+
+
 
     @if (session('error'))
         <script>

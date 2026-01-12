@@ -133,7 +133,7 @@ class CartController extends Controller
             ]);
         }
 
-        return back()->with('success', 'Added to cart');
+        return back()->with('cart_added', 'Added to cart');
     }
 
     /*
