@@ -335,8 +335,7 @@ class CheckoutController extends Controller
          * 9️⃣ 其他付款方式 → Checkout Success Page
          */
         return redirect()
-            ->route('checkout.success', $order)
-            ->with('success', 'Order placed successfully.');
+            ->route('checkout.success', $order);
     }
 
     public function success(Order $order)

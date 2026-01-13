@@ -25,30 +25,32 @@
                 {{-- Right Content --}}
                 <main class="lg:col-span-3 space-y-8">
 
-                    {{-- Header --}}
-                    <section class="relative overflow-hidden bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
-                        <div
-                            class="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-[#F9F4E5] rounded-full opacity-50 blur-3xl">
-                        </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {{-- Left: Invite friends + stats --}}
+                        <section
+                            class="relative overflow-hidden bg-white rounded-3xl border border-gray-100 shadow-sm p-8 flex flex-col justify-between">
+                            <div
+                                class="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-[#F9F4E5] rounded-full opacity-50 blur-3xl">
+                            </div>
 
-                        <div class="relative flex flex-col md:flex-row md:items-end justify-between gap-6">
-                            <div>
-                                <h1 class="text-3xl font-black text-gray-900 leading-tight">
+                            <div class="relative">
+                                <h1 class="text-3xl font-black text-gray-900 leading-tight tracking-tight">
                                     Invite friends
                                 </h1>
-                                <p class="text-sm text-gray-500 mt-2 max-w-xl">
-                                    Share your referral code with friends. When they register, they will be under your
-                                    account.
-                                    Reward points will be available soon.
+                                <p class="text-sm text-gray-500 mt-2 max-w-sm leading-relaxed">
+                                    Share your referral code with friends. When they register, they will be linked to
+                                    your account.
+                                    <span class="block mt-1 font-medium text-[#8f6a10]/70">Reward points coming
+                                        soon.</span>
                                 </p>
                             </div>
 
                             {{-- Stats --}}
-                            <div class="flex items-center gap-3">
+                            <div class="relative mt-8 flex items-center gap-4">
                                 {{-- Total Referrals --}}
                                 <div
-                                    class="px-5 py-3 rounded-2xl bg-gray-50 border border-gray-100 text-center min-w-[120px]">
-                                    <div class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">
+                                    class="flex-1 px-5 py-4 rounded-2xl bg-gray-50 border border-gray-100 transition-all hover:bg-gray-100/50">
+                                    <div class="text-[10px] font-bold uppercase tracking-[0.1em] text-gray-400 mb-1">
                                         Total Referrals
                                     </div>
                                     <div class="text-2xl font-black text-gray-900">
@@ -58,8 +60,8 @@
 
                                 {{-- Reward Points --}}
                                 <div
-                                    class="px-5 py-3 rounded-2xl bg-[#fcfaf6] border border-[#D4AF37]/30 text-center min-w-[120px]">
-                                    <div class="text-[10px] font-bold uppercase tracking-wider text-[#8f6a10] mb-1">
+                                    class="flex-1 px-5 py-4 rounded-2xl bg-[#fcfaf6] border border-[#D4AF37]/20 transition-all hover:border-[#D4AF37]/40">
+                                    <div class="text-[10px] font-bold uppercase tracking-[0.1em] text-[#8f6a10] mb-1">
                                         Reward Points
                                     </div>
                                     <div class="text-2xl font-black text-[#8f6a10]">
@@ -67,56 +69,60 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </section>
+                        </section>
 
-
-                    {{-- Referral Code --}}
-                    <section class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
-                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-
-                            <div>
-                                <p class="text-[10px] font-black uppercase tracking-[0.18em] text-[#8f6a10] mb-2">
-                                    Your Referral Code
+                        {{-- Right: Referral Code --}}
+                        <section
+                            class="relative bg-white rounded-3xl border border-gray-100 shadow-sm p-8 flex flex-col">
+                            <div class="mb-auto">
+                                <p class="text-[10px] font-black uppercase tracking-[0.2em] text-[#8f6a10] mb-4">
+                                    Your Unique Referral Code
                                 </p>
 
-                                <div
-                                    class="inline-flex items-center gap-3 px-5 py-3 rounded-2xl bg-[#fcfaf6] border border-[#D4AF37]/20">
-                                    <span class="font-mono text-base font-black tracking-widest text-gray-900">
+                                <div onclick="copyReferralCode()"
+                                    class="group cursor-pointer relative flex items-center justify-between px-6 py-5 rounded-2xl bg-[#fcfaf6] border-2 border-dashed border-[#D4AF37]/30 hover:border-[#D4AF37] transition-all">
+                                    <span class="font-mono text-2xl font-black tracking-[0.2em] text-gray-900">
                                         {{ $user->referral_code }}
                                     </span>
+
+                                    <div
+                                        class="flex items-center gap-2 text-[#8f6a10] font-bold text-xs uppercase tracking-wider opacity-60 group-hover:opacity-100 transition-opacity">
+                                        <span>Click to Copy</span>
+                                    </div>
                                 </div>
 
-                                <p class="text-xs text-gray-500 mt-2">
-                                    Share this code with your friends during registration.
+                                <p class="text-xs text-gray-400 mt-4 leading-relaxed">
+                                    Friends enter this code during registration to grant you rewards.
                                 </p>
                             </div>
 
-                            <div class="flex items-center gap-3">
+                            <div class="mt-8">
                                 <button type="button" onclick="copyReferralCode()"
-                                    class="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-black text-white text-sm font-bold hover:opacity-90 transition">
+                                    class="w-full inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-black text-white text-sm font-bold hover:bg-gray-800 active:scale-[0.98] transition-all shadow-lg shadow-black/5">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                        stroke-width="1.5">
+                                        stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M8 16h8M8 12h8m-6 8h6a2 2 0 002-2V6a2 2 0 00-2-2H10l-4 4v10a2 2 0 002 2z" />
+                                            d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5 0H15.75a1.125 1.125 0 011.125 1.125v12.375c0 .621-.504 1.125-1.125 1.125H9.75a1.125 1.125 0 01-1.125-1.125V17.25" />
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M8.25 6.75h12.75a1.125 1.125 0 011.125 1.125v12.375a1.125 1.125 0 01-1.125 1.125H15.75" />
                                     </svg>
-                                    Copy Code
+                                    Copy Referral Code
                                 </button>
+
+                                <div class="h-6 mt-2"> {{-- Fixed height container to prevent layout shift --}}
+                                    <p id="copyToast" class="text-center text-xs text-emerald-600 font-bold hidden">
+                                        ✨ Copied to clipboard!
+                                    </p>
+                                    <p id="copyFail" class="text-center text-xs text-red-600 font-bold hidden">
+                                        Copy failed. Please copy manually.
+                                    </p>
+                                </div>
                             </div>
-                        </div>
 
-                        {{-- hidden input for fallback copy --}}
-                        <input id="refCodeInput" type="text" value="{{ $user->referral_code }}"
-                            class="absolute -left-[9999px] top-0 opacity-0 pointer-events-none" readonly>
-
-                        <p id="copyToast" class="mt-3 text-xs text-emerald-600 font-semibold hidden">
-                            Referral code copied!
-                        </p>
-
-                        <p id="copyFail" class="mt-3 text-xs text-red-600 font-semibold hidden">
-                            Copy failed. Please select and copy manually.
-                        </p>
-                    </section>
+                            <input id="refCodeInput" type="text" value="{{ $user->referral_code }}"
+                                class="absolute -left-[9999px] top-0 opacity-0 pointer-events-none" readonly>
+                        </section>
+                    </div>
 
                     {{-- Referral List --}}
                     <section>
@@ -170,7 +176,7 @@
                                                 </td>
 
                                                 <td class="px-6 py-4 text-gray-500">
-                                                    {{ $r->created_at->format('M d, Y') }}
+                                                    {{ $r->created_at->format('d M Y') }}
                                                 </td>
                                             </tr>
                                         @empty
@@ -238,17 +244,29 @@
                                         @forelse ($pointTransactions as $tx)
                                             <tr class="hover:bg-[#FAF9F6] transition-colors">
                                                 <td class="px-6 py-4 text-gray-500">
-                                                    {{ $tx->created_at->format('M d, Y') }}
+                                                    {{ $tx->created_at->format('d M Y') }}
                                                 </td>
+
+                                                 @php
+                                                    $refUser = $tx->referralLog?->referredUser;
+                                                @endphp
 
                                                 <td class="px-6 py-4">
                                                     <div class="text-gray-900 font-semibold">
                                                         Referral Order
+                                                        @if ($refUser)
+                                                            <span class="text-gray-500 font-normal">
+                                                                • {{ $refUser->name }}
+                                                            </span>
+                                                        @endif
                                                     </div>
                                                     <div class="text-xs text-gray-500">
                                                         {{ $tx->note ?? 'Referral reward' }}
                                                     </div>
                                                 </td>
+
+                                               
+
 
                                                 <td class="px-6 py-4 text-right">
                                                     <span class="font-black text-emerald-600">

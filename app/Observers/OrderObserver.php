@@ -32,13 +32,12 @@ class OrderObserver
         $points = (int) floor($order->total);
         if ($points <= 0) return;
 
-        // ✅ 每单发一次，带 order_id 防重复
-        app(PointsService::class)->creditReferralByOrder(
+        app(PointsService::class)->creditReferral(
             $buyer->referrer,
             $log,
             $order,
             $points,
-            'Referral order completed (RM 1 = 1 point)'
+            'Referral first order completed (RM 1 = 1 point)'
         );
     }
 }

@@ -26,12 +26,17 @@ class AccountReferralController extends Controller
             'points' => (int) $user->points_balance,
         ];
 
-        $pointTransactions = PointTransaction::with(['user'])
+        $pointTransactions = PointTransaction::with([
+            'referralLog.referredUser:id,name,email',
+            'order:id,order_no',
+        ])
             ->where('user_id', $user->id)
             ->where('source', 'referral')
             ->latest()
             ->paginate(10)
             ->withQueryString();
+
+
 
         return view('account.referral.index', compact(
             'user',

@@ -183,6 +183,13 @@
                                             My Wishlist
                                         </a>
 
+                                        {{-- <a href="{{ route('account.referral.index') }}"
+                                            class="block px-4 py-2.5 text-sm font-medium rounded-xl transition
+                                            text-gray-200 hover:bg-white/10 hover:text-[#D4AF37]
+                                            {{ request()->routeIs('account.favorites.*') ? 'bg-white/10 text-[#D4AF37]' : '' }}">
+                                            Referral
+                                        </a>
+
                                         <a href="{{ route('account.address.index') }}"
                                             class="block px-4 py-2.5 text-sm font-medium rounded-xl transition
                                             text-gray-200 hover:bg-white/10 hover:text-[#D4AF37]
@@ -195,7 +202,7 @@
                                             text-gray-200 hover:bg-white/10 hover:text-[#D4AF37]
                                             {{ request()->routeIs('account.profile.*') ? 'bg-white/10 text-[#D4AF37]' : '' }}">
                                             Profile Settings
-                                        </a>
+                                        </a> --}}
 
                                         <div class="my-1 border-t border-white/10"></div>
 
@@ -517,7 +524,7 @@
                         </a>
 
                         {{-- Addresses --}}
-                        <a href="{{ route('account.address.index') }}"
+                        {{-- <a href="{{ route('account.address.index') }}"
                             class="flex items-center justify-between px-5 py-4 text-sm font-bold text-white
                   border-b border-white/10 active:bg-white/5 transition">
                             <div class="flex items-center gap-3">
@@ -531,7 +538,7 @@
                                 <span>Shipping Addresses</span>
                             </div>
                             <span class="w-2 h-2 border-r-2 border-b-2 border-white/40 rotate-[-45deg]"></span>
-                        </a>
+                        </a> --}}
 
                         {{-- Profile --}}
                         <a href="{{ route('account.profile.edit') }}"
