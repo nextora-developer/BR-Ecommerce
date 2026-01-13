@@ -4,95 +4,85 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Product;
+use App\Models\Category;
 use Illuminate\Support\Str;
 
 class ProductSeeder extends Seeder
 {
     public function run(): void
     {
-        $products = [
-            [
-                'name' => 'Classic Cotton T-Shirt',
-                'category_id' => 1,
-                'price' => 39.90,
-                'stock' => 30,
-            ],
-            [
-                'name' => 'Premium Hoodie Jacket',
-                'category_id' => 1,
-                'price' => 119.00,
-                'stock' => 15,
-            ],
-            [
-                'name' => 'Leather Wallet',
-                'category_id' => 2,
-                'price' => 89.00,
-                'stock' => 20,
-            ],
-            [
-                'name' => 'Stylish Sports Bottle',
-                'category_id' => 2,
-                'price' => 29.90,
-                'stock' => 40,
-            ],
-            [
-                'name' => 'Minimalist Backpack',
-                'category_id' => 3,
-                'price' => 139.00,
-                'stock' => 12,
-            ],
-            [
-                'name' => 'Wireless Earbuds',
-                'category_id' => 3,
-                'price' => 159.00,
-                'stock' => 18,
-            ],
-            [
-                'name' => 'USB-C Fast Charger',
-                'category_id' => 4,
-                'price' => 49.90,
-                'stock' => 25,
-            ],
-            [
-                'name' => 'Bluetooth Portable Speaker',
-                'category_id' => 4,
-                'price' => 189.00,
-                'stock' => 10,
-            ],
-            [
-                'name' => 'Office Table Lamp',
-                'category_id' => 5,
-                'price' => 79.00,
-                'stock' => 16,
-            ],
-            [
-                'name' => 'Smart Digital Clock',
-                'category_id' => 5,
-                'price' => 99.00,
-                'stock' => 14,
-            ],
+        // 你要更多就改这个数字：每个 sub category 生成多少个产品
+        $perSub = 4;
+
+        $adjectives = ['Classic', 'Premium', 'Minimal', 'Signature', 'Essential', 'Modern', 'Pro', 'Everyday'];
+        $suffixes   = ['Edition', 'Series', 'Collection', 'Set', 'Kit', 'Pack', 'Bundle', 'Style'];
+
+        // 不同 parent 给不同价格区间（更像真的）
+        $parentBase = [
+            'fashion-apparel'     => [29, 169],
+            'accessories'         => [19, 199],
+            'gadgets'             => [49, 499],
+            'home-living'         => [29, 399],
+            'beauty-personal-care' => [15, 199],
+            'sports-outdoors'     => [25, 399],
+            'kitchen-dining'      => [19, 299],
+            'pet-supplies'        => [12, 189],
+            'toys-games'          => [15, 249],
+            'stationery-office'   => [5, 129],
+            'automotive'          => [19, 399],
+            'baby-kids'           => [15, 249],
+            'health-wellness'     => [19, 299],
+            'travel-luggage'      => [29, 499],
+            'groceries-food'      => [5, 99],
         ];
 
-        foreach ($products as $item) {
+        // 只抓 sub categories（产品应该绑 sub）
+        $subs = Category::where('is_active', true)
+            ->whereNotNull('parent_id')
+            ->with('parent')
+            ->orderBy('parent_id')
+            ->orderBy('sort_order')
+            ->get();
 
-            $slug = Str::slug($item['name']);
+        foreach ($subs as $cat) {
+            $parentSlug = $cat->parent?->slug;
 
-            Product::updateOrCreate(
-                ['slug' => $slug], // 唯一条件
-                [
-                    'category_id'       => $item['category_id'],
-                    'name'              => $item['name'],
-                    'slug'              => $slug,
-                    'short_description' => 'High-quality product with elegant design.',
-                    'description'       => 'This is a premium product designed for daily lifestyle use.',
-                    'price'             => $item['price'],
-                    'stock'             => $item['stock'],
-                    'has_variants'      => false,
-                    'is_active'         => true,
-                    'is_digital'        => false,
-                    'image'             => null,
-                ]
-            );
+            [$min, $max] = $parentBase[$parentSlug] ?? [19, 199];
+
+            for ($i = 1; $i <= $perSub; $i++) {
+                $adj = $adjectives[($i - 1) % count($adjectives)];
+                $suf = $suffixes[($i - 1) % count($suffixes)];
+
+                // 产品名（更像真的）
+                $name = "{$adj} {$cat->name} {$suf}";
+
+                // slug 保证唯一：加上 category slug + 编号
+                $slug = Str::slug($name) . '-' . $cat->slug . '-' . $i;
+
+                // 价格：用 deterministic 方式算（每次跑都一样）
+                $seed = abs(crc32($cat->slug . '|' . $i));
+                $price = $min + ($seed % (($max - $min) + 1));
+                $price = round($price - 0.10, 2); // 给一点“xx.90”感
+
+                $stock = 10 + ($seed % 41); // 10 ~ 50
+
+                Product::updateOrCreate(
+                    ['slug' => $slug],
+                    [
+                        'category_id'       => $cat->id,
+                        'name'              => $name,
+                        'slug'              => $slug,
+                        'short_description' => "Curated {$cat->name} item for everyday use.",
+                        'description'       => "A premium {$cat->name} product under {$cat->parent?->name}. Designed for quality, comfort, and daily lifestyle needs.",
+                        'price'             => $price,
+                        'stock'             => $stock,
+                        'has_variants'      => false,
+                        'is_active'         => true,
+                        'is_digital'        => false,
+                        'image'             => null,
+                    ]
+                );
+            }
         }
     }
 }
