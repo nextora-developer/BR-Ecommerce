@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PointTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -9,7 +10,7 @@ class AccountController extends Controller
 {
     public function index(Request $request)
     {
-        
+
         $user = auth()->user();
 
         // 真实统计
@@ -19,12 +20,19 @@ class AccountController extends Controller
             'addresses' => $user->addresses()->count() ?? 0,
         ];
 
+        $stats['points'] = (int) ($user->points_balance ?? 0);
+
+        $pointTransactions = PointTransaction::where('user_id', $user->id)
+            ->where('source', 'purchase') // ✅ 只看自己的 cashback
+            ->latest()
+            ->limit(10) // overview 只 show 10
+            ->get();
+
         $latestOrders = $user->orders()
             ->latest()
             ->take(3)
             ->get();
 
-        return view('account.index', compact('user', 'stats', 'latestOrders'));
+        return view('account.index', compact('user', 'stats', 'latestOrders', 'pointTransactions'));
     }
-
 }

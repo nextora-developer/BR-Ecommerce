@@ -461,14 +461,14 @@
             </div>
 
             {{-- Highlighted Link --}}
-            <a href="https://brif.cloud/" target="_blank"
+            {{-- <a href="https://brif.cloud/" target="_blank"
                 class="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-[#D4AF37]/20 to-transparent border border-[#D4AF37]/20 text-[#D4AF37] mb-6 transition-all active:scale-95">
                 <span class="font-black tracking-tight">Visit Official Website</span>
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M14 5l7 7m0 0l-7 7m7-7H3" />
                 </svg>
-            </a>
+            </a> --}}
 
             {{-- ================= Account (App-style Sidebar) ================= --}}
             @auth
@@ -481,9 +481,9 @@
                             class="flex items-center justify-between px-5 py-4 text-sm font-bold text-white
                   border-b border-white/10 active:bg-white/5 transition">
                             <div class="flex items-center gap-3">
-            
-                                <svg class="w-5 h-5 text-[#D4AF37]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                    stroke-width="1.5" stroke="currentColor" >
+
+                                <svg class="w-5 h-5 text-[#D4AF37]" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                    viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
                                 </svg>
@@ -523,8 +523,24 @@
                             <span class="w-2 h-2 border-r-2 border-b-2 border-white/40 rotate-[-45deg]"></span>
                         </a>
 
+                        {{-- Referral --}}
+                        <a href="{{ route('account.referral.index') }}"
+                            class="flex items-center justify-between px-5 py-4 text-sm font-bold text-white
+                  border-b border-white/10 active:bg-white/5 transition">
+                            <div class="flex items-center gap-3">
+                                <svg class="h-5 w-5 text-[#D4AF37]" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                    viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z" />
+                                </svg>
+                                <span>Referral</span>
+                            </div>
+                            <span class="w-2 h-2 border-r-2 border-b-2 border-white/40 rotate-[-45deg]"></span>
+                        </a>
+
+
                         {{-- Addresses --}}
-                        {{-- <a href="{{ route('account.address.index') }}"
+                        <a href="{{ route('account.address.index') }}"
                             class="flex items-center justify-between px-5 py-4 text-sm font-bold text-white
                   border-b border-white/10 active:bg-white/5 transition">
                             <div class="flex items-center gap-3">
@@ -538,7 +554,7 @@
                                 <span>Shipping Addresses</span>
                             </div>
                             <span class="w-2 h-2 border-r-2 border-b-2 border-white/40 rotate-[-45deg]"></span>
-                        </a> --}}
+                        </a>
 
                         {{-- Profile --}}
                         <a href="{{ route('account.profile.edit') }}"
@@ -548,21 +564,21 @@
                                 <svg class="w-5 h-5 text-[#D4AF37]" fill="none" stroke="currentColor"
                                     stroke-width="1.5" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0
-                                                       a1.724 1.724 0 002.573 1.066
-                                                       c1.543-.94 3.31.826 2.37 2.37
-                                                       a1.724 1.724 0 001.065 2.572
-                                                       c1.756.426 1.756 2.924 0 3.35
-                                                       a1.724 1.724 0 00-1.066 2.573
-                                                       c.94 1.543-.826 3.31-2.37 2.37
-                                                       a1.724 1.724 0 00-2.572 1.065
-                                                       c-.426 1.756-2.924 1.756-3.35 0
-                                                       a1.724 1.724 0 00-2.573-1.066
-                                                       c-1.543.94-3.31-.826-2.37-2.37
-                                                       a1.724 1.724 0 00-1.065-2.572
-                                                       c-1.756-.426-1.756-2.924 0-3.35
-                                                       a1.724 1.724 0 001.066-2.573
-                                                       c-.94-1.543.826-3.31 2.37-2.37
-                                                       a1.724 1.724 0 002.572-1.065z" />
+                                                               a1.724 1.724 0 002.573 1.066
+                                                               c1.543-.94 3.31.826 2.37 2.37
+                                                               a1.724 1.724 0 001.065 2.572
+                                                               c1.756.426 1.756 2.924 0 3.35
+                                                               a1.724 1.724 0 00-1.066 2.573
+                                                               c.94 1.543-.826 3.31-2.37 2.37
+                                                               a1.724 1.724 0 00-2.572 1.065
+                                                               c-.426 1.756-2.924 1.756-3.35 0
+                                                               a1.724 1.724 0 00-2.573-1.066
+                                                               c-1.543.94-3.31-.826-2.37-2.37
+                                                               a1.724 1.724 0 00-1.065-2.572
+                                                               c-1.756-.426-1.756-2.924 0-3.35
+                                                               a1.724 1.724 0 001.066-2.573
+                                                               c-.94-1.543.826-3.31 2.37-2.37
+                                                               a1.724 1.724 0 002.572-1.065z" />
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                 </svg>

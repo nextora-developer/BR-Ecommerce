@@ -18,7 +18,7 @@ class AccountReferralController extends Controller
         $referrals = ReferralLog::with(['referredUser:id,name,email,created_at'])
             ->where('referrer_id', $user->id)
             ->latest()
-            ->paginate(12)
+            ->paginate(5)
             ->withQueryString();
 
         $stats = [
@@ -33,7 +33,7 @@ class AccountReferralController extends Controller
             ->where('user_id', $user->id)
             ->where('source', 'referral')
             ->latest()
-            ->paginate(10)
+            ->paginate(5)
             ->withQueryString();
 
 

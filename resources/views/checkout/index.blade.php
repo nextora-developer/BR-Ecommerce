@@ -125,8 +125,7 @@
                                                     data-postcode="{{ $addr->postcode }}"
                                                     data-city="{{ $addr->city }}" data-state="{{ $addr->state }}"
                                                     data-country="{{ $addr->country }}"
-                                                    class="address-card min-w-[260px] max-w-[260px] text-left rounded-2xl border-2 p-4 transition-all relative group
-    border-gray-100 bg-white hover:border-gray-300">
+                                                    class="address-card min-w-[260px] max-w-[260px] text-left rounded-2xl border-2 p-4 transition-all relative group border-gray-100 bg-white hover:border-gray-300">
 
                                                     @if ($isDefault)
                                                         <div class="absolute top-3 right-3">
@@ -624,8 +623,9 @@
                                             <span class="text-xl font-black text-[#8f6a10]" data-total-text>
                                                 RM {{ number_format($subtotal, 2) }}
                                             </span>
-                                            <p class="text-[10px] text-gray-600 uppercase tracking-widest">
-                                                Inclusive of Tax
+                                            <p class="text-xs text-gray-500 uppercase tracking-widest mt-1">
+                                                Estimated Earn: <span class="font-black text-gray-700"><span
+                                                        id="cashbackPointsText">0</span> points</span>
                                             </p>
                                         </div>
                                     </div>
@@ -923,6 +923,8 @@
             const shippingText = document.querySelector('[data-shipping-text]');
             const totalText = document.querySelector('[data-total-text]');
             const payAmountEl = document.querySelector('[data-pay-amount]');
+            const cashbackPointsText = document.getElementById('cashbackPointsText');
+
 
             const hasPhysical = @json($hasPhysical);
             const shippingRates = @json($shippingRates);
@@ -1049,13 +1051,13 @@
                 totalText.textContent = 'RM ' + finalTotal.toFixed(2);
                 if (payAmountEl) payAmountEl.textContent = 'RM ' + finalTotal.toFixed(2);
 
-                // ✅ 更新 shipping discount row 数字
                 if (shippingDiscountText) shippingDiscountText.textContent = shippingDiscount.toFixed(2);
 
-
-                totalText.textContent = 'RM ' + finalTotal.toFixed(2);
-                if (payAmountEl) payAmountEl.textContent = 'RM ' + finalTotal.toFixed(2);
+                // ✅ Cashback points (RM1=1pt, floor)
+                const cashbackPoints = Math.max(0, Math.floor(finalTotal));
+                if (cashbackPointsText) cashbackPointsText.textContent = cashbackPoints.toLocaleString();
             }
+
 
             function refreshAll() {
                 renderShipping();
@@ -1170,94 +1172,4 @@
             }
         });
     </script>
-
-
-
-    {{-- <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const msgEl = document.getElementById('voucherMsg');
-
-            function showMsg(text, ok = true) {
-                if (!msgEl) return;
-                msgEl.textContent = text;
-                msgEl.className = 'mt-3 text-xs font-bold rounded-xl px-3 py-2 ' + (ok ?
-                    'bg-green-50 text-green-700 border border-green-200' :
-                    'bg-red-50 text-red-700 border border-red-200');
-            }
-
-            // ✅ Apply Voucher (AJAX POST)
-            const applyBtn = document.getElementById('btnApplyVoucher');
-            if (applyBtn) {
-                applyBtn.addEventListener('click', async () => {
-                    const input = document.getElementById('voucherCodeInput');
-                    const code = (input?.value || '').trim();
-
-                    if (!code) {
-                        showMsg('Please enter a voucher code.', false);
-                        return;
-                    }
-
-                    try {
-                        const res = await fetch("{{ route('voucher.apply') }}", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                "X-CSRF-TOKEN": "{{ csrf_token() }}",
-                                "Accept": "application/json",
-                            },
-                            body: JSON.stringify({
-                                code
-                            })
-                        });
-
-                        // 如果你的 controller 现在是 back()->with(...) 不是 JSON，
-                        // 这里仍然可以用：成功就 reload
-                        if (res.ok) {
-                            window.location.reload();
-                            return;
-                        }
-
-                        // 尝试读 JSON 错误
-                        let data = null;
-                        try {
-                            data = await res.json();
-                        } catch (e) {}
-
-                        const err = data?.message || 'Voucher apply failed.';
-                        showMsg(err, false);
-
-                    } catch (e) {
-                        showMsg('Network error. Please try again.', false);
-                    }
-                });
-            }
-
-            // ✅ Remove Voucher (AJAX POST)
-            const removeBtn = document.getElementById('btnRemoveVoucher');
-            if (removeBtn) {
-                removeBtn.addEventListener('click', async () => {
-                    try {
-                        const res = await fetch("{{ route('voucher.remove') }}", {
-                            method: "POST",
-                            headers: {
-                                "X-CSRF-TOKEN": "{{ csrf_token() }}",
-                                "Accept": "application/json",
-                            }
-                        });
-
-                        if (res.ok) {
-                            window.location.reload();
-                            return;
-                        }
-
-                        showMsg('Failed to remove voucher.', false);
-                    } catch (e) {
-                        showMsg('Network error. Please try again.', false);
-                    }
-                });
-            }
-        });
-    </script> --}}
-
-
 </x-app-layout>

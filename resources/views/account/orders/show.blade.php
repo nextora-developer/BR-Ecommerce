@@ -262,6 +262,13 @@
 
                                 <h2 class="font-semibold text-[#0A0A0C] text-base mb-4">Order Summary</h2>
 
+                                @php
+                                    $pointsRate = 1; // RM1 = 1pt
+                                    $earnedPoints = (int) floor(($order->total ?? 0) * $pointsRate);
+                                    $isCompleted = $order->status === 'completed';
+                                @endphp
+
+
                                 <div class="space-y-2 text-sm">
                                     <div class="flex justify-between text-gray-600">
                                         <span>Subtotal</span>
@@ -302,11 +309,27 @@
 
                                 <div class="h-px bg-[#D4AF37]/20 my-4"></div>
 
-                                <div class="flex justify-between items-baseline">
-                                    <span class="text-sm font-semibold text-[#0A0A0C]">Total</span>
-                                    <span class="text-2xl font-semibold text-[#0A0A0C]">
-                                        RM {{ number_format($order->total, 2) }}
-                                    </span>
+                                <div class="space-y-2">
+                                    {{-- Total --}}
+                                    <div class="flex justify-between items-baseline">
+                                        <span class="text-sm font-semibold text-[#0A0A0C]">Total</span>
+                                        <span class="text-2xl font-semibold text-[#0A0A0C]">
+                                            RM {{ number_format($order->total, 2) }}
+                                        </span>
+                                    </div>
+
+                                    {{-- Earn --}}
+                                    <div class="flex justify-between items-baseline">
+                                        <span
+                                            class="text-sm font-semibold {{ $isCompleted ? 'text-emerald-700' : 'text-[#8f6a10]' }}">
+                                            {{ $isCompleted ? 'Earned' : 'Will Earn' }}
+                                        </span>
+
+                                        <span
+                                            class="text-lg font-semibold {{ $isCompleted ? 'text-emerald-700' : 'text-[#0A0A0C]' }}">
+                                            +{{ number_format($earnedPoints) }} pts
+                                        </span>
+                                    </div>
                                 </div>
 
                                 {{-- Payment --}}
@@ -335,8 +358,6 @@
                                     @endif
                                 </div>
                             </div>
-
-
                         </div>
 
 

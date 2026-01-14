@@ -147,7 +147,7 @@
                                                 Email
                                             </th>
                                             <th
-                                                class="px-6 py-4 text-left text-[11px] font-black uppercase tracking-wider text-gray-400">
+                                                class="px-6 py-4 text-right text-[11px] font-black uppercase tracking-wider text-gray-400">
                                                 Registered
                                             </th>
                                         </tr>
@@ -175,7 +175,7 @@
                                                     {{ $ru->email ?? '-' }}
                                                 </td>
 
-                                                <td class="px-6 py-4 text-gray-500">
+                                                <td class="px-6 py-4 text-right text-gray-500">
                                                     {{ $r->created_at->format('d M Y') }}
                                                 </td>
                                             </tr>
@@ -269,7 +269,8 @@
 
 
                                                 <td class="px-6 py-4 text-right">
-                                                    <span class="font-black text-emerald-600">
+                                                    <span
+                                                        class="inline-flex items-center font-black text-emerald-600 bg-emerald-50 px-3 py-1 rounded-lg">
                                                         +{{ number_format($tx->points) }}
                                                     </span>
                                                 </td>

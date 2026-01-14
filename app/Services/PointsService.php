@@ -58,4 +58,37 @@ class PointsService
             return true;
         });
     }
+
+    public function creditPurchase(
+        User $buyer,
+        Order $order,
+        int $points,
+        string $note = 'Purchase cashback (RM 1 = 1 point)'
+    ): bool {
+        return DB::transaction(function () use ($buyer, $order, $points, $note) {
+
+            // ✅ 防重复：同一张订单的 purchase cashback 只发一次
+            $exists = PointTransaction::where('source', 'purchase')
+                ->where('order_id', $order->id)
+                ->where('user_id', $buyer->id)
+                ->exists();
+
+            if ($exists) return false;
+
+            $lockedBuyer = User::whereKey($buyer->id)->lockForUpdate()->first();
+
+            PointTransaction::create([
+                'user_id'  => $lockedBuyer->id,
+                'type'     => 'earn',
+                'source'   => 'purchase',
+                'order_id' => $order->id,
+                'points'   => $points,
+                'note'     => $note,
+            ]);
+
+            $lockedBuyer->increment('points_balance', $points);
+
+            return true;
+        });
+    }
 }
