@@ -50,6 +50,16 @@
                 <span>Back to List</span>
             </a>
 
+            <a href="{{ route('admin.orders.invoice.pdf', $order) }}" target="_blank"
+                class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-bold hover:bg-black transition-all shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 3v12m0 0l3.75-3.75M12 15l-3.75-3.75M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5" />
+                </svg>
+                Invoice PDF
+            </a>
+
             {{-- Show HitPay Dashboard Button only if payment is HitPay --}}
             @if ($order->gateway === 'hitpay' || str_contains(strtolower($order->payment_method_name ?? ''), 'hitpay'))
                 <a href="https://dashboard.hit-pay.com/payments/{{ $order->payment_reference }}" target="_blank"
@@ -58,9 +68,9 @@
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
                         stroke="currentColor" class="w-4 h-4">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5
-                                             c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639
-                                             C20.577 16.49 16.64 19.5 12 19.5
-                                             c-4.638 0-8.573-3.007-9.963-7.178z" />
+                                                         c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639
+                                                         C20.577 16.49 16.64 19.5 12 19.5
+                                                         c-4.638 0-8.573-3.007-9.963-7.178z" />
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
 
@@ -210,7 +220,8 @@
                             <div
                                 class="min-h-[80px] w-full text-sm leading-relaxed px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50/50 transition-colors group-hover:bg-gray-50">
                                 @if ($order->remark)
-                                    <p class="text-gray-700 whitespace-pre-line break-words">{{ trim($order->remark) }}</p>
+                                    <p class="text-gray-700 whitespace-pre-line break-words">{{ trim($order->remark) }}
+                                    </p>
                                 @else
                                     <p class="text-gray-400 font-light">No special instructions provided for this
                                         order.</p>

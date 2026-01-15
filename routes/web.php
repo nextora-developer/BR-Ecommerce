@@ -7,6 +7,7 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\VoucherController;
 use App\Http\Controllers\VoucherPageController;
+use App\Http\Controllers\ProductReviewController;
 
 use App\Http\Controllers\Admin\AdminCategoryController;
 use App\Http\Controllers\Admin\AdminProductController;
@@ -22,6 +23,7 @@ use App\Http\Controllers\Admin\AdminShippingController;
 use App\Http\Controllers\Admin\AdminVoucherController;
 use App\Http\Controllers\Admin\AdminPopupBannerController;
 use App\Http\Controllers\Admin\AdminPointTransactionController;
+use App\Http\Controllers\Admin\AdminOrderInvoiceController;
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AccountOrderController;
@@ -30,7 +32,7 @@ use App\Http\Controllers\AccountProfileController;
 use App\Http\Controllers\AccountFavoriteController;
 use App\Http\Controllers\AccountReferralController;
 use App\Http\Controllers\AccountReviewController;
-use App\Http\Controllers\ProductReviewController;
+use App\Http\Controllers\AccountOrderInvoiceController;
 
 use App\Http\Controllers\HitpayController;
 
@@ -120,6 +122,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/orders', [AccountOrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/{order}', [AccountOrderController::class, 'show'])->name('orders.show');
         Route::post('/orders/{order}/complete', [AccountOrderController::class, 'markCompleted'])->name('orders.complete');
+        Route::get('/orders/{order}/invoice/pdf', [AccountOrderInvoiceController::class, 'pdf'])->name('orders.invoice.pdf');
 
         // Address
         Route::get('/addresses', [AccountAddressController::class, 'index'])
@@ -200,6 +203,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('orders', [AdminOrderController::class, 'index'])->name('orders.index');
     Route::get('orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
     Route::post('orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('orders.status');
+    Route::get('orders/{order}/invoice/pdf', [AdminOrderInvoiceController::class, 'pdf'])->name('orders.invoice.pdf');
 
     Route::resource('users', AdminUserController::class)
         ->only(['index', 'show', 'edit', 'update']);

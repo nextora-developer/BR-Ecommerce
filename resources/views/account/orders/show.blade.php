@@ -75,6 +75,20 @@
                                     </form>
                                 @endif
 
+                                {{-- Invoice PDF --}}
+                                <a href="{{ route('account.orders.invoice.pdf', $order) }}" target="_blank"
+                                    class="inline-flex items-center gap-1.5 px-3 md:px-4 py-1.5 md:py-2 rounded-xl
+                                            bg-gray-900 text-white text-xs md:text-sm font-semibold
+                                            hover:bg-black active:scale-95 transition">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
+                                        viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M12 3v12m0 0l3.75-3.75M12 15l-3.75-3.75M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5" />
+                                    </svg>
+                                    <span>Invoice PDF</span>
+                                </a>
+
+
                             </div>
 
                         </div>
@@ -305,7 +319,25 @@
                                             <span>- RM {{ number_format($order->shipping_discount, 2) }}</span>
                                         </div>
                                     @endif
+
+                                    {{-- ✅ Points Redeemed --}}
+                                    @if (($order->points_discount ?? 0) > 0)
+                                        <div class="flex justify-between text-green-700 font-medium">
+                                            <span class="flex items-center gap-1">
+                                                Points Redeemed
+                                                @if (($order->points_redeem ?? 0) > 0)
+                                                    <span
+                                                        class="text-[12px] px-2 py-0.5 rounded-full text-green-700 font-bold tracking-wide">
+                                                        {{ number_format((int) $order->points_redeem) }} pts
+                                                    </span>
+                                                @endif
+                                            </span>
+                                            <span>- RM {{ number_format((float) $order->points_discount, 2) }}</span>
+                                        </div>
+                                    @endif
+
                                 </div>
+
 
                                 <div class="h-px bg-[#D4AF37]/20 my-4"></div>
 
