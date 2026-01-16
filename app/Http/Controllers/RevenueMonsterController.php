@@ -450,7 +450,7 @@ class RevenueMonsterController extends Controller
         }
 
         // ⚠️ webhook 只有这 3 个
-        $parts[] = 'method=post';
+        $parts[] = 'method=callback';
         $parts[] = 'nonceStr=' . $nonceStr;
         $parts[] = 'timestamp=' . $timestamp;
 
