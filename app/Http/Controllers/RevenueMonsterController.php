@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Mail\AdminOrderNotificationMail;
 use App\Mail\OrderPlacedMail;
 use App\Models\Order;
+use App\Models\Voucher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -14,87 +15,52 @@ use Illuminate\Support\Str;
 class RevenueMonsterController extends Controller
 {
     /**
-     * 创建 Hosted Payment Checkout (v3/payment/online)
+     * Create Hosted Payment Checkout
      * POST https://(sb-)open.revenuemonster.my/v3/payment/online
      */
-    private function rmAccessToken(): string
-    {
-        return cache()->remember('rm_access_token', now()->addDays(25), function () {
-
-            $clientId     = (string) config('services.rm.client_id');
-            $clientSecret = (string) config('services.rm.client_secret');
-            $oauthBase    = (string) config('services.rm.oauth_base');
-
-            if (!$clientId || !$clientSecret) {
-                throw new \RuntimeException('RM client_id / client_secret missing.');
-            }
-
-            $basic   = base64_encode($clientId . ':' . $clientSecret);
-            $tokenUrl = rtrim($oauthBase, '/') . '/v1/token';
-
-            $res = Http::asJson()
-                ->withHeaders([
-                    'Authorization' => 'Basic ' . $basic,
-                ])
-                ->post($tokenUrl, [
-                    'grantType' => 'client_credentials',
-                ]);
-
-            $json = $res->json();
-
-            if (!$res->ok() || empty($json['accessToken'])) {
-                Log::error('RM OAuth token failed', [
-                    'http' => $res->status(),
-                    'json' => $json,
-                    'body' => $res->body(),
-                ]);
-                throw new \RuntimeException('RM OAuth token failed.');
-            }
-
-            Log::info('RM OAuth token obtained', [
-                'expiresIn' => $json['expiresIn'] ?? null,
-            ]);
-
-            return (string) $json['accessToken'];
-        });
-    }
-
     public function pay(Order $order)
     {
         abort_unless(auth()->check(), 403);
+
         if (!empty($order->user_id)) {
             abort_unless((int) $order->user_id === (int) auth()->id(), 403);
         }
 
         if (strtolower((string) $order->status) !== 'pending') {
-            return redirect()->route('account.orders.show', $order)
+            return redirect()
+                ->route('account.orders.show', $order)
                 ->with('error', 'This order is not payable.');
         }
 
-        $amountCents = (int) round(((float) $order->total) * 100);
-        $rmOrderId   = Str::padLeft((string) $order->id, 24, '0');
+        // ✅ Amount (cents)
+        $amountCents = (int) round(((float) ($order->total ?? 0)) * 100);
 
-        // 🔍 金额诊断（你之前出现过 0）
         Log::info('RM amount debug', [
-            'grand_total_raw'   => $order->total,
-            'grand_total_float' => (float) $order->total,
-            'amount_cents'      => $amountCents,
+            'order_no'         => $order->order_no,
+            'total_raw'        => $order->total,
+            'total_float'      => (float) $order->total,
+            'amount_cents'     => $amountCents,
         ]);
 
-        // 读取配置
+        if ($amountCents <= 0) {
+            Log::error('RM amount invalid', [
+                'order_no' => $order->order_no,
+                'total'    => $order->total,
+            ]);
+            return back()->with('error', 'Order amount invalid. Please contact support.');
+        }
+
+        // ✅ RM requires order.id to be 24 chars
+        $rmOrderId = Str::padLeft((string) $order->id, 24, '0');
+
+        // ✅ Config
         $storeId    = (string) config('services.rm.store_id');
         $apiBase    = (string) config('services.rm.api_base');
         $returnUrl  = (string) config('services.rm.return_url');
         $webhookUrl = (string) config('services.rm.webhook_url');
 
-        // OAuth access token（✅ 关键）
+        // ✅ OAuth token
         $accessToken = $this->rmAccessToken();
-
-        Log::info('RM access token snapshot', [
-            'token_length' => strlen($accessToken),
-            'token_head8'  => substr($accessToken, 0, 8),
-            'token_tail8'  => substr($accessToken, -8),
-        ]);
 
         Log::info('RM config snapshot', [
             'store_id'       => $storeId,
@@ -106,6 +72,7 @@ class RevenueMonsterController extends Controller
             'amount_cents'   => $amountCents,
         ]);
 
+        // ✅ Payload
         $payload = [
             'storeId'       => $storeId,
             'redirectUrl'   => $returnUrl,
@@ -131,26 +98,24 @@ class RevenueMonsterController extends Controller
         $nonceStr  = Str::random(32);
         $timestamp = (string) time();
         $signType  = 'sha256';
-        $requestPath = '/v3/payment/online';
 
         Log::info('RM signing request', [
             'endpoint'    => $endpoint,
-            'request_path' => $requestPath,
             'nonce_len'   => strlen($nonceStr),
             'timestamp'   => $timestamp,
             'sign_type'   => $signType,
             'payload_md5' => md5(json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)),
         ]);
 
+        // ✅ Signature body (base64), header must include "sha256 " prefix
         $signatureBody = $this->signRequest(
             payload: $payload,
             method: 'post',
             nonceStr: $nonceStr,
             timestamp: $timestamp,
             signType: $signType,
-            requestUrl: $endpoint // ✅ 这里是完整 URL
+            requestUrl: $endpoint // ✅ full URL as RM doc
         );
-
 
         Log::info('RM signature generated', [
             'signature_len'   => strlen($signatureBody),
@@ -161,7 +126,7 @@ class RevenueMonsterController extends Controller
         $headers = [
             'Accept'        => 'application/json',
             'Content-Type'  => 'application/json',
-            'Authorization' => 'Bearer ' . $accessToken, // ✅ 正确
+            'Authorization' => 'Bearer ' . $accessToken,
             'X-Nonce-Str'   => $nonceStr,
             'X-Timestamp'   => $timestamp,
             'X-Sign-Type'   => $signType,
@@ -206,35 +171,29 @@ class RevenueMonsterController extends Controller
         return redirect()->away($redirectUrl);
     }
 
-
     public function handleReturn(Request $request)
     {
-        // ✅ return 只做提示，不改 paid（以 webhook 为准）
+        // ✅ Return page: show message only, status update relies on webhook
         return redirect()
             ->route('account.orders.index')
             ->with('success', 'We received your payment return. Your order will update once confirmed.');
     }
 
-
     public function handleWebhook(Request $request)
     {
         Log::info('RM webhook headers', $request->headers->all());
 
-        $raw     = $request->getContent();
+        $rawBody = $request->getContent();
         $headers = $request->headers->all();
         $payload = $request->all();
 
-        // ✅ 1) 验签（callback：requestUrl 可 skip）
-        if (!$this->verifySignatureCallback($raw, $headers)) {
+        // ✅ 1) Verify signature
+        if (!$this->verifySignatureCallback($rawBody, $headers)) {
             Log::warning('RM webhook signature invalid', ['payload' => $payload]);
             return response()->json(['message' => 'invalid signature'], 401);
         }
 
-        /**
-         * ✅ 2) 找订单（你不想加 rm_order_id）
-         * 优先：additionalData = 你的 order_no
-         * 兜底：order.id = 24 chars padded numeric id
-         */
+        // ✅ 2) Find order (prefer additionalData = order_no)
         $order = null;
 
         $orderNo = data_get($payload, 'data.order.additionalData');
@@ -261,22 +220,22 @@ class RevenueMonsterController extends Controller
             return response()->json(['ok' => true]);
         }
 
-        // ✅ 3) 幂等
+        // ✅ 3) Idempotent
         if (strtolower((string) $order->status) === 'paid') {
             return response()->json(['ok' => true]);
         }
 
-        // ✅ 4) 状态与金额
-        $status = strtoupper((string) (data_get($payload, 'data.status') ?? data_get($payload, 'status')));
+        // ✅ 4) Status & amount validation
+        $status      = strtoupper((string) (data_get($payload, 'data.status') ?? data_get($payload, 'status')));
         $finalAmount = (int) (data_get($payload, 'data.finalAmount') ?? 0); // cents
-        $expected = (int) round(((float) $order->total) * 100);
+        $expected    = (int) round(((float) ($order->total ?? 0)) * 100);
 
         if ($finalAmount && $finalAmount !== $expected) {
             Log::warning('RM finalAmount mismatch', [
-                'order_no'  => $order->order_no,
-                'expected'  => $expected,
-                'got'       => $finalAmount,
-                'status'    => $status,
+                'order_no' => $order->order_no,
+                'expected' => $expected,
+                'got'      => $finalAmount,
+                'status'   => $status,
             ]);
             return response()->json(['ok' => true]);
         }
@@ -285,13 +244,15 @@ class RevenueMonsterController extends Controller
         $failed  = ['FAILED', 'CANCELLED', 'EXPIRED'];
 
         if (in_array($status, $success, true)) {
+
+            $this->consumeVoucherIfAny($order);
+
             $order->update([
                 'status' => 'paid',
-                // 'paid_at' => now(), // 有字段才开
+                // 'paid_at' => now(), // enable if you have this field
             ]);
 
             $this->sendOrderEmailsSafely($order);
-
             return response()->json(['ok' => true]);
         }
 
@@ -305,33 +266,75 @@ class RevenueMonsterController extends Controller
         return response()->json(['ok' => true]);
     }
 
-
-    private function sendOrderEmailsSafely(Order $order): void
+    private function consumeVoucherIfAny(Order $order): void
     {
-        // Customer
-        if (!empty($order->customer_email)) {
-            try {
-                Mail::to($order->customer_email)->send(new OrderPlacedMail($order));
-            } catch (\Throwable $e) {
-                Log::error('RM: customer email failed', ['order' => $order->order_no, 'error' => $e->getMessage()]);
-            }
+        // 你按自己结构改字段名
+        if (!$order->voucher_code && !$order->voucher_id) return;
+
+        // ✅ 幂等：避免 webhook 重复扣
+        if (!empty($order->voucher_consumed_at)) return;
+
+        // 示例：你如果有 Voucher 模型 & uses 字段
+        $voucher = $order->voucher_id
+            ? Voucher::find($order->voucher_id)
+            : Voucher::where('code', $order->voucher_code)->first();
+
+        if ($voucher) {
+            $voucher->increment('uses');
         }
 
-        // Admin
-        $admin = config('mail.admin_address');
-        if (!empty($admin)) {
-            try {
-                Mail::to($admin)->send(new AdminOrderNotificationMail($order));
-            } catch (\Throwable $e) {
-                Log::error('RM: admin email failed', ['order' => $order->order_no, 'error' => $e->getMessage()]);
+        $order->update([
+            'voucher_consumed_at' => now(),
+        ]);
+    }
+
+
+    /**
+     * OAuth: client_credentials -> accessToken (cached)
+     */
+    private function rmAccessToken(): string
+    {
+        return cache()->remember('rm_access_token', now()->addDays(25), function () {
+            $clientId     = (string) config('services.rm.client_id');
+            $clientSecret = (string) config('services.rm.client_secret');
+            $oauthBase    = (string) config('services.rm.oauth_base');
+
+            if (!$clientId || !$clientSecret) {
+                throw new \RuntimeException('RM client_id / client_secret missing.');
             }
-        }
+
+            $basic    = base64_encode($clientId . ':' . $clientSecret);
+            $tokenUrl = rtrim($oauthBase, '/') . '/v1/token';
+
+            $res = Http::asJson()
+                ->withHeaders([
+                    'Authorization' => 'Basic ' . $basic,
+                ])
+                ->post($tokenUrl, [
+                    'grantType' => 'client_credentials',
+                ]);
+
+            $json = $res->json();
+
+            if (!$res->ok() || empty($json['accessToken'])) {
+                Log::error('RM OAuth token failed', [
+                    'http' => $res->status(),
+                    'json' => $json,
+                    'body' => $res->body(),
+                ]);
+                throw new \RuntimeException('RM OAuth token failed.');
+            }
+
+            Log::info('RM OAuth token obtained', [
+                'expiresIn' => $json['expiresIn'] ?? null,
+            ]);
+
+            return (string) $json['accessToken'];
+        });
     }
 
     /**
-     * ✅ Sign request: sort JSON (nested) -> compact -> base64
-     * plain text: data=...&method=post&nonceStr=...&signType=sha256&timestamp=...&requestUrl=...
-     * sign with PRIVATE KEY (RSA SHA256), return base64 signature
+     * Sign request (RSA SHA256) following RM convention
      */
     private function signRequest(
         array $payload,
@@ -339,7 +342,7 @@ class RevenueMonsterController extends Controller
         string $nonceStr,
         string $timestamp,
         string $signType,
-        string $requestUrl // ✅ 这里传完整 URL
+        string $requestUrl // ✅ full URL
     ): string {
         $sorted = $this->ksortRecursive($payload);
 
@@ -348,7 +351,7 @@ class RevenueMonsterController extends Controller
             throw new \RuntimeException('RM json_encode failed.');
         }
 
-        // ✅ RM 文档要求替换特殊字符（更稳）
+        // RM doc: replace special chars
         $compact = str_replace(
             ['<', '>', '&'],
             ['\u003c', '\u003e', '\u0026'],
@@ -357,7 +360,7 @@ class RevenueMonsterController extends Controller
 
         $dataB64 = base64_encode($compact);
 
-        // ✅ 按 RM 文档示例的参数顺序拼接（很关键）
+        // IMPORTANT: param order
         $plain = 'data=' . $dataB64
             . '&method=' . strtolower($method)
             . '&nonceStr=' . $nonceStr
@@ -365,21 +368,21 @@ class RevenueMonsterController extends Controller
             . '&signType=' . strtolower($signType)
             . '&timestamp=' . $timestamp;
 
-        $privKeyRes = $this->loadPrivateKeyForRm();
+        $privKey = $this->loadPrivateKeyForRm();
 
         $sig = '';
-        $ok = openssl_sign($plain, $sig, $privKeyRes, OPENSSL_ALGO_SHA256);
+        $ok = openssl_sign($plain, $sig, $privKey, OPENSSL_ALGO_SHA256);
 
         if (!$ok || $sig === '') {
             throw new \RuntimeException('RM openssl_sign failed.');
         }
 
-        // ✅ 注意：这里只返回 base64(signature) 本体，header 那边再加前缀
         return base64_encode($sig);
     }
 
-
-
+    /**
+     * Load private key safely from env/config
+     */
     private function loadPrivateKeyForRm(): \OpenSSLAsymmetricKey
     {
         $k = (string) config('services.rm.private_key');
@@ -392,7 +395,9 @@ class RevenueMonsterController extends Controller
         $k = trim($k, " \t\n\r\0\x0B\"'");
 
         $res = openssl_pkey_get_private($k);
-        if ($res !== false) return $res;
+        if ($res !== false) {
+            return $res;
+        }
 
         while ($m = openssl_error_string()) {
             Log::error('OpenSSL: ' . $m);
@@ -401,35 +406,76 @@ class RevenueMonsterController extends Controller
         throw new \RuntimeException('RM private key invalid.');
     }
 
+    private function sendOrderEmailsSafely(Order $order): void
+    {
+        // Customer
+        if (!empty($order->customer_email)) {
+            try {
+                Mail::to($order->customer_email)->send(new OrderPlacedMail($order));
+            } catch (\Throwable $e) {
+                Log::error('RM: customer email failed', [
+                    'order' => $order->order_no,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        // Admin
+        $admin = (string) config('mail.admin_address');
+        if (!empty($admin)) {
+            try {
+                Mail::to($admin)->send(new AdminOrderNotificationMail($order));
+            } catch (\Throwable $e) {
+                Log::error('RM: admin email failed', [
+                    'order' => $order->order_no,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+    }
+
     /**
-     * ✅ Verify callback(webhook): requestUrl can be skip
-     * plain: (data=...&)?method=post&nonceStr=...&signType=sha256&timestamp=...
+     * Verify callback(webhook)
+     * Note: RM webhook X-Signature might contain "sha256 <base64>" or just "<base64>"
      */
     private function verifySignatureCallback(string $rawBody, array $headers): bool
     {
         $nonceStr  = $this->headerValue($headers, 'x-nonce-str') ?? $this->headerValue($headers, 'nonceStr');
         $timestamp = $this->headerValue($headers, 'x-timestamp') ?? $this->headerValue($headers, 'timestamp');
         $signType  = strtolower($this->headerValue($headers, 'x-sign-type') ?? $this->headerValue($headers, 'signType') ?? 'sha256');
-        $signatureBody = $this->headerValue($headers, 'x-signature')
+
+        $sigHeader = $this->headerValue($headers, 'x-signature')
             ?? $this->headerValue($headers, 'signature')
             ?? $this->headerValue($headers, 'sign');
 
-        if (!$nonceStr || !$timestamp || !$signatureBody) return false;
+        if (!$nonceStr || !$timestamp || !$sigHeader) {
+            return false;
+        }
+
+        // ✅ strip "sha256 " prefix if exists
+        $signatureBody = trim((string) $sigHeader);
+        if (str_contains($signatureBody, ' ')) {
+            $parts = preg_split('/\s+/', $signatureBody, 2);
+            $signatureBody = $parts[1] ?? $signatureBody;
+        }
 
         $parts = [];
 
         $rawBody = trim($rawBody);
         if ($rawBody !== '') {
             $decoded = json_decode($rawBody, true);
+
             if (is_array($decoded)) {
-                $sorted = $this->ksortRecursive($decoded);
+                $sorted  = $this->ksortRecursive($decoded);
                 $compact = json_encode($sorted, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
             } else {
                 $compact = $rawBody;
             }
+
             $parts[] = 'data=' . base64_encode($compact);
         }
 
+        // RM callback plain (no requestUrl)
         $parts[] = 'method=post';
         $parts[] = 'nonceStr=' . $nonceStr;
         $parts[] = 'signType=' . $signType;
@@ -437,11 +483,15 @@ class RevenueMonsterController extends Controller
 
         $plain = implode('&', $parts);
 
-        $pubKey = config('services.rm.public_key');
-        if (!$pubKey) return false;
+        $pubKey = (string) config('services.rm.public_key');
+        if (!$pubKey) {
+            return false;
+        }
 
         $sigBin = base64_decode($signatureBody, true);
-        if ($sigBin === false) return false;
+        if ($sigBin === false) {
+            return false;
+        }
 
         return openssl_verify($plain, $sigBin, $pubKey, OPENSSL_ALGO_SHA256) === 1;
     }
@@ -449,20 +499,26 @@ class RevenueMonsterController extends Controller
     private function headerValue(array $headers, string $key): ?string
     {
         $keyLower = strtolower($key);
+
         foreach ($headers as $k => $vals) {
             if (strtolower($k) === $keyLower) {
                 return is_array($vals) ? (string) ($vals[0] ?? null) : (string) $vals;
             }
         }
+
         return null;
     }
 
     private function ksortRecursive(array $data): array
     {
         foreach ($data as $k => $v) {
-            if (is_array($v)) $data[$k] = $this->ksortRecursive($v);
+            if (is_array($v)) {
+                $data[$k] = $this->ksortRecursive($v);
+            }
         }
+
         ksort($data);
+
         return $data;
     }
 }
