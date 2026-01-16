@@ -416,58 +416,43 @@ class RevenueMonsterController extends Controller
         $nonceStr  = $this->headerValue($headers, 'x-nonce-str');
         $timestamp = $this->headerValue($headers, 'x-timestamp');
 
-        $sigHeader = $this->headerValue($headers, 'x-signature')
-            ?? $this->headerValue($headers, 'signature')
-            ?? $this->headerValue($headers, 'sign');
-
+        $sigHeader = $this->headerValue($headers, 'x-signature');
         if (!$nonceStr || !$timestamp || !$sigHeader) {
             return false;
         }
 
         // x-signature: "sha256 <base64>"
-        $sigHeader = trim($sigHeader);
         if (!str_contains($sigHeader, ' ')) {
             return false;
         }
+        [, $signatureBody] = explode(' ', trim($sigHeader), 2);
 
-        [, $signatureBody] = explode(' ', $sigHeader, 2);
-        $signatureBody = trim($signatureBody);
-
-        // -------- data = payload.data ----------
         $decoded = json_decode($rawBody, true);
         if (!is_array($decoded) || !isset($decoded['data'])) {
             return false;
         }
 
+        // ✅ 只用 payload.data
         $sorted  = $this->ksortRecursive($decoded['data']);
         $compact = json_encode($sorted, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        if ($compact === false) {
-            return false;
-        }
+        if ($compact === false) return false;
 
         $compact = str_replace(['<', '>', '&'], ['\u003c', '\u003e', '\u0026'], $compact);
 
-        $parts = [];
-        $parts[] = 'data=' . base64_encode($compact);
-
-        // ✅ 注意：这里一定是 post
-        $parts[] = 'method=post';
-        $parts[] = 'nonceStr=' . $nonceStr;
-        $parts[] = 'timestamp=' . $timestamp;
-
-        $plain = implode('&', $parts);
-
-        $pubKey = config('services.rm.public_key');
-        if (!$pubKey) return false;
+        $plain =
+            'data=' . base64_encode($compact)
+            . '&method=post'
+            . '&nonceStr=' . $nonceStr
+            . '&timestamp=' . $timestamp;
 
         $sigBin = base64_decode($signatureBody, true);
         if ($sigBin === false) return false;
 
+        $pubKey = config('services.rm.public_key');
+        if (!$pubKey) return false;
+
         return openssl_verify($plain, $sigBin, $pubKey, OPENSSL_ALGO_SHA256) === 1;
     }
-
-
-
 
     private function headerValue(array $headers, string $key): ?string
     {
