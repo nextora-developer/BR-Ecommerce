@@ -256,15 +256,40 @@ class RevenueMonsterController extends Controller
             throw new \RuntimeException('RM private key missing (RM_PRIVATE_KEY).');
         }
 
-        // ✅ 把 .env 的 \n 变回真正换行
-        $privateKey = str_replace(["\\n", "\r\n", "\r"], "\n", $privateKey);
-        $privateKey = trim($privateKey);
+        /**
+         * ✅ 强力清洗：把 \n 变回换行、去掉 Windows \r、去掉首尾引号/空格，
+         * 再“重建 PEM”（64字一行），OpenSSL 最爱标准 PEM。
+         */
+        $k = $privateKey;
+        $k = str_replace(["\r\n", "\r"], "\n", $k);
+        $k = str_replace("\\n", "\n", $k);
+        $k = trim($k, " \t\n\r\0\x0B\"'");
 
-        // ✅ 转成 OpenSSL key resource/object
-        $privKeyRes = openssl_pkey_get_private($privateKey);
+        // 把 BEGIN/END 行统一成 PRIVATE KEY（避免被面板改坏或多空格）
+        $k = preg_replace('/-----BEGIN\s+([A-Z ]+)\s+-----/', '-----BEGIN PRIVATE KEY-----', $k);
+        $k = preg_replace('/-----END\s+([A-Z ]+)\s+-----/', '-----END PRIVATE KEY-----', $k);
+
+        // 抽出 body，移除全部空白，再按 64 字换行重建
+        $body = $k;
+        $body = str_replace("-----BEGIN PRIVATE KEY-----", "", $body);
+        $body = str_replace("-----END PRIVATE KEY-----", "", $body);
+        $body = preg_replace('/\s+/', '', $body);
+
+        $pem = "-----BEGIN PRIVATE KEY-----\n"
+            . chunk_split($body, 64, "\n")
+            . "-----END PRIVATE KEY-----\n";
+
+        // ✅ 安全日志：只记录长度，不泄露内容
+        Log::info('RM private key pem length=' . strlen($pem));
+
+        $privKeyRes = openssl_pkey_get_private($pem);
         if ($privKeyRes === false) {
+            while ($m = openssl_error_string()) {
+                Log::error('OpenSSL: ' . $m);
+            }
             throw new \RuntimeException('RM private key invalid / cannot be loaded by OpenSSL.');
         }
+
 
         $signature = null;
         $ok = openssl_sign($plain, $signature, $privKeyRes, OPENSSL_ALGO_SHA256);
