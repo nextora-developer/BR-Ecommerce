@@ -172,37 +172,11 @@ class RevenueMonsterController extends Controller
 
     public function handleReturn(Request $request)
     {
-        $orderNo = $request->query('order_no');
-
-        if (!$orderNo) {
-            return redirect()
-                ->route('account.orders.index')
-                ->with('error', 'Missing order reference.');
-        }
-
-        $order = Order::where('order_no', $orderNo)->first();
-
-        if (!$order) {
-            return redirect()
-                ->route('account.orders.index')
-                ->with('error', 'Order not found.');
-        }
-
-        // ✅ 已经 paid（webhook 已来） -> success
-        if (strtolower((string) $order->status) === 'paid') {
-            return redirect()->route('checkout.success', $order);
-        }
-
-        // ✅ 没有 paid（用户退出来/没付） -> 直接 failed
-        if (strtolower((string) $order->status) === 'pending') {
-            $order->update(['status' => 'failed']);
-        }
-
+        // ✅ Return page: show message only, status update relies on webhook
         return redirect()
             ->route('account.orders.index')
-            ->with('error', 'Payment not completed. Order marked as failed.');
+            ->with('success', 'We received your payment return. Your order will update once confirmed.');
     }
-
 
     public function handleWebhook(Request $request)
     {
@@ -441,23 +415,31 @@ class RevenueMonsterController extends Controller
     {
         $nonceStr  = $this->headerValue($headers, 'x-nonce-str') ?? $this->headerValue($headers, 'nonceStr');
         $timestamp = $this->headerValue($headers, 'x-timestamp') ?? $this->headerValue($headers, 'timestamp');
-        $signType  = strtolower($this->headerValue($headers, 'x-sign-type') ?? $this->headerValue($headers, 'signType') ?? 'sha256');
 
+        // RM webhook 常见：x-signature = "sha256 <base64>"
         $sigHeader = $this->headerValue($headers, 'x-signature')
             ?? $this->headerValue($headers, 'signature')
             ?? $this->headerValue($headers, 'sign');
 
-        if (!$nonceStr || !$timestamp || !$sigHeader) {
-            return false;
+        if (!$nonceStr || !$timestamp || !$sigHeader) return false;
+
+        $sigHeader = trim($sigHeader);
+
+        // ✅ 解析 "sha256 <sig>"（没有 x-sign-type 也没关系）
+        $signType = 'sha256';
+        $signatureBody = $sigHeader;
+
+        if (str_contains($sigHeader, ' ')) {
+            [$maybeType, $maybeSig] = array_pad(preg_split('/\s+/', $sigHeader, 2), 2, null);
+            if ($maybeType && $maybeSig) {
+                $signType = strtolower(trim($maybeType));
+                $signatureBody = trim($maybeSig);
+            }
         }
 
-        // ✅ strip "sha256 " prefix if exists
-        $signatureBody = trim((string) $sigHeader);
-        if (str_contains($signatureBody, ' ')) {
-            $parts = preg_split('/\s+/', $signatureBody, 2);
-            $signatureBody = $parts[1] ?? $signatureBody;
-        }
+        if ($signatureBody === '') return false;
 
+        // ✅ Step: body -> json decode -> sort -> compact json -> (replace special char) -> base64
         $parts = [];
 
         $rawBody = trim($rawBody);
@@ -471,10 +453,15 @@ class RevenueMonsterController extends Controller
                 $compact = $rawBody;
             }
 
+            if ($compact === false) return false;
+
+            // ✅ 跟你 signRequest 一样处理 < > &
+            $compact = str_replace(['<', '>', '&'], ['\u003c', '\u003e', '\u0026'], $compact);
+
             $parts[] = 'data=' . base64_encode($compact);
         }
 
-        // RM callback plain (no requestUrl)
+        // ✅ callback 验签：requestUrl 可以 skip（RM 文档）
         $parts[] = 'method=post';
         $parts[] = 'nonceStr=' . $nonceStr;
         $parts[] = 'signType=' . $signType;
@@ -483,17 +470,14 @@ class RevenueMonsterController extends Controller
         $plain = implode('&', $parts);
 
         $pubKey = (string) config('services.rm.public_key');
-        if (!$pubKey) {
-            return false;
-        }
+        if ($pubKey === '') return false;
 
         $sigBin = base64_decode($signatureBody, true);
-        if ($sigBin === false) {
-            return false;
-        }
+        if ($sigBin === false) return false;
 
         return openssl_verify($plain, $sigBin, $pubKey, OPENSSL_ALGO_SHA256) === 1;
     }
+
 
     private function headerValue(array $headers, string $key): ?string
     {
