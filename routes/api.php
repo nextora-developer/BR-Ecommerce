@@ -13,3 +13,7 @@ Route::get('/ping', function () {
 // HitPay Webhook
 Route::post('/hitpay/webhook', [HitpayController::class, 'handleWebhook'])
     ->name('hitpay.webhook');
+
+// Revenue Monster Webhook
+Route::post('/payment/rm/webhook', [RevenueMonsterController::class, 'handleWebhook'])
+    ->name('payment.rm.webhook');

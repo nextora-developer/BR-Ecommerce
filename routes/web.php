@@ -292,8 +292,4 @@ Route::get('/pay/rm/{order}', [RevenueMonsterController::class, 'pay'])
 Route::get('/payment/rm/return', [RevenueMonsterController::class, 'handleReturn'])
     ->name('payment.rm.return');
 
-// Revenue Monster Webhook
-Route::post('/payment/rm/webhook', [RevenueMonsterController::class, 'handleWebhook'])
-    ->name('payment.rm.webhook');
-
 require __DIR__ . '/auth.php';
