@@ -379,6 +379,30 @@ class RevenueMonsterController extends Controller
         throw new \RuntimeException('RM private key invalid.');
     }
 
+    private function loadPublicKeyForRm(): \OpenSSLAsymmetricKey
+    {
+        $k = (string) config('services.rm.public_key');
+        if ($k === '') {
+            throw new \RuntimeException('RM public key missing.');
+        }
+
+        // 统一换行 / 处理 env 里的 \n
+        $k = str_replace(["\r\n", "\r"], "\n", $k);
+        $k = str_replace("\\n", "\n", $k);
+        $k = trim($k, " \t\n\r\0\x0B\"'");
+
+        // ✅ 必须转成 OpenSSL key resource
+        $res = openssl_pkey_get_public($k);
+        if ($res !== false) return $res;
+
+        while ($m = openssl_error_string()) {
+            Log::error('OpenSSL(pub): ' . $m);
+        }
+
+        throw new \RuntimeException('RM public key invalid.');
+    }
+
+
     private function sendOrderEmailsSafely(Order $order): void
     {
         // Customer
@@ -451,7 +475,8 @@ class RevenueMonsterController extends Controller
         $pubKey = config('services.rm.public_key');
         if (!$pubKey) return false;
 
-        return openssl_verify($plain, $sigBin, $pubKey, OPENSSL_ALGO_SHA256) === 1;
+        $pubKeyRes = $this->loadPublicKeyForRm();
+        return openssl_verify($plain, $sigBin, $pubKeyRes, OPENSSL_ALGO_SHA256) === 1;
     }
 
     private function headerValue(array $headers, string $key): ?string
