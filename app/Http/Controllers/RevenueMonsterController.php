@@ -29,30 +29,26 @@ class RevenueMonsterController extends Controller
                 ->with('error', 'This order is not payable.');
         }
 
-        // ✅ order.id 必须 24 chars：生成并存到 orders.rm_order_id
-        if (empty($order->rm_order_id)) {
-            $order->rm_order_id = Str::random(24);
-            $order->payment_method = 'revenue_monster';
-            $order->save();
-        }
-
         $amountCents = (int) round(((float) $order->grand_total) * 100);
 
-        // ✅ 按你贴的文档参数结构
+        // ✅ RM 文档：order.id 要 24 chars
+        // 用订单的 numeric id 做一个稳定 24 chars 的值：000000000000000000000004
+        $rmOrderId = Str::padLeft((string) $order->id, 24, '0');
+
         $payload = [
             'storeId'       => config('services.rm.store_id'),
             'redirectUrl'   => config('services.rm.return_url'),
             'notifyUrl'     => config('services.rm.webhook_url'),
             'layoutVersion' => 'v4',
-            'type'          => 'WEB_PAYMENT', // 网站用 WEB_PAYMENT；手机 app 可用 MOBILE_PAYMENT
-            // 'method'      => ['FPX_MY', 'TNG_MY'], // 可选：限制支付方式
+            'type'          => 'WEB_PAYMENT',
             'order' => [
-                'id'           => $order->rm_order_id,             // ✅ 24 chars
-                'title'        => Str::limit('Order ' . $order->order_no, 32, ''),
-                'currencyType' => 'MYR',
-                'amount'       => $amountCents,
-                'detail'       => null,
-                'additionalData' => (string) $order->order_no,     // ✅ 用这个回查你的订单
+                'id'             => $rmOrderId,
+                'title'          => Str::limit('Order ' . $order->order_no, 32, ''),
+                'currencyType'   => 'MYR',
+                'amount'         => $amountCents,
+                'detail'         => null,
+                // ✅ 用这个回查你的真实订单（webhook 用它找回 order_no）
+                'additionalData' => (string) $order->order_no,
             ],
             'customer' => [
                 'email'       => $order->customer_email ?? $order->email ?? null,
@@ -63,7 +59,6 @@ class RevenueMonsterController extends Controller
 
         $endpoint = rtrim((string) config('services.rm.api_base'), '/') . '/v3/payment/online';
 
-        // ✅ RM 要求：Data object 递归排序 -> compact -> base64 -> plain text -> RSA sign
         $nonceStr  = Str::random(32);
         $timestamp = (string) time();
         $signType  = 'sha256';
@@ -78,30 +73,29 @@ class RevenueMonsterController extends Controller
         );
 
         $res = Http::withHeaders([
-            'Accept'      => 'application/json',
-            'Content-Type' => 'application/json',
+            'Accept'        => 'application/json',
+            'Content-Type'  => 'application/json',
             'Authorization' => 'Bearer ' . (string) config('services.rm.api_key'),
-
-            // ✅ 常见 RM header（你 portal 示例如果不同就按实际改）
-            'X-Nonce-Str' => $nonceStr,
-            'X-Timestamp' => $timestamp,
-            'X-Sign-Type' => $signType,
-            'X-Signature' => $signature,
+            'X-Nonce-Str'   => $nonceStr,
+            'X-Timestamp'   => $timestamp,
+            'X-Sign-Type'   => $signType,
+            'X-Signature'   => $signature,
         ])->post($endpoint, $payload);
 
         $data = $res->json();
 
         if (!$res->ok() || data_get($data, 'code') !== 'SUCCESS') {
             Log::error('RM create checkout failed', [
-                'http' => $res->status(),
-                'body' => $res->body(),
-                'json' => $data,
-                'order_no' => $order->order_no,
+                'http'      => $res->status(),
+                'body'      => $res->body(),
+                'json'      => $data,
+                'order_no'  => $order->order_no,
+                'endpoint'  => $endpoint,
             ]);
+
             return back()->with('error', data_get($data, 'error.message') ?? 'Unable to start payment.');
         }
 
-        // ✅ 文档：item.url
         $redirectUrl = data_get($data, 'item.url');
         if (!$redirectUrl) {
             Log::error('RM missing item.url', ['json' => $data]);
@@ -111,6 +105,7 @@ class RevenueMonsterController extends Controller
         return redirect()->away($redirectUrl);
     }
 
+
     public function handleReturn(Request $request)
     {
         // ✅ return 只做提示，不改 paid（以 webhook 为准）
@@ -119,10 +114,7 @@ class RevenueMonsterController extends Controller
             ->with('success', 'We received your payment return. Your order will update once confirmed.');
     }
 
-    /**
-     * Notify(Webhook) - 文档写：success / fail / refund 不一定都触发 notify
-     * 你贴的 notify payload：eventType + data.order.id + data.status + data.finalAmount
-     */
+
     public function handleWebhook(Request $request)
     {
         Log::info('RM webhook headers', $request->headers->all());
@@ -133,29 +125,38 @@ class RevenueMonsterController extends Controller
 
         // ✅ 1) 验签（callback：requestUrl 可 skip）
         if (!$this->verifySignatureCallback($raw, $headers)) {
-            Log::warning('RM webhook signature invalid');
+            Log::warning('RM webhook signature invalid', ['payload' => $payload]);
             return response()->json(['message' => 'invalid signature'], 401);
         }
 
-        // ✅ 2) 取 RM order id（24 chars）
-        $rmOrderId = data_get($payload, 'data.order.id');
-        if (!$rmOrderId) {
-            Log::warning('RM webhook missing data.order.id', ['payload' => $payload]);
-            return response()->json(['ok' => true]);
+        /**
+         * ✅ 2) 找订单（你不想加 rm_order_id）
+         * 优先：additionalData = 你的 order_no
+         * 兜底：order.id = 24 chars padded numeric id
+         */
+        $order = null;
+
+        $orderNo = data_get($payload, 'data.order.additionalData');
+        if ($orderNo) {
+            $order = Order::where('order_no', $orderNo)->first();
         }
 
-        $order = Order::where('rm_order_id', $rmOrderId)->first();
-
-        // 兜底：如果你没加 rm_order_id，也可以用 additionalData 回查
         if (!$order) {
-            $orderNo = data_get($payload, 'data.order.additionalData');
-            if ($orderNo) {
-                $order = Order::where('order_no', $orderNo)->first();
+            $rmOrderId = data_get($payload, 'data.order.id');
+            if ($rmOrderId) {
+                $numericId = (int) ltrim((string) $rmOrderId, '0');
+                if ($numericId > 0) {
+                    $order = Order::find($numericId);
+                }
             }
         }
 
         if (!$order) {
-            Log::warning('RM webhook order not found', ['rmOrderId' => $rmOrderId]);
+            Log::warning('RM webhook order not found', [
+                'rmOrderId' => data_get($payload, 'data.order.id'),
+                'orderNo'   => $orderNo,
+                'payload'   => $payload,
+            ]);
             return response()->json(['ok' => true]);
         }
 
@@ -165,15 +166,16 @@ class RevenueMonsterController extends Controller
         }
 
         // ✅ 4) 状态与金额
-        $status = strtoupper((string) data_get($payload, 'data.status'));
-        $finalAmount = (int) data_get($payload, 'data.finalAmount'); // cents
+        $status = strtoupper((string) (data_get($payload, 'data.status') ?? data_get($payload, 'status')));
+        $finalAmount = (int) (data_get($payload, 'data.finalAmount') ?? 0); // cents
         $expected = (int) round(((float) $order->grand_total) * 100);
 
         if ($finalAmount && $finalAmount !== $expected) {
             Log::warning('RM finalAmount mismatch', [
-                'order_no' => $order->order_no,
-                'expected' => $expected,
-                'got' => $finalAmount,
+                'order_no'  => $order->order_no,
+                'expected'  => $expected,
+                'got'       => $finalAmount,
+                'status'    => $status,
             ]);
             return response()->json(['ok' => true]);
         }
@@ -182,10 +184,9 @@ class RevenueMonsterController extends Controller
         $failed  = ['FAILED', 'CANCELLED', 'EXPIRED'];
 
         if (in_array($status, $success, true)) {
-            // paid_at 没字段就注释掉
             $order->update([
-                'status'  => 'paid',
-                // 'paid_at' => now(),
+                'status' => 'paid',
+                // 'paid_at' => now(), // 有字段才开
             ]);
 
             $this->sendOrderEmailsSafely($order);
@@ -202,6 +203,7 @@ class RevenueMonsterController extends Controller
 
         return response()->json(['ok' => true]);
     }
+
 
     private function sendOrderEmailsSafely(Order $order): void
     {
