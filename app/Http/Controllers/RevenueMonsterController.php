@@ -337,9 +337,9 @@ class RevenueMonsterController extends Controller
         $plain = 'data=' . $dataB64
             . '&method=' . strtolower($method)
             . '&nonceStr=' . $nonceStr
-            . '&requestUrl=' . $requestUrl
             . '&signType=' . strtolower($signType)
-            . '&timestamp=' . $timestamp;
+            . '&timestamp=' . $timestamp
+            . '&requestUrl=' . $requestUrl;
 
         $privKey = $this->loadPrivateKeyForRm();
 
@@ -439,43 +439,49 @@ class RevenueMonsterController extends Controller
     {
         $nonceStr  = $this->headerValue($headers, 'x-nonce-str');
         $timestamp = $this->headerValue($headers, 'x-timestamp');
-
         $sigHeader = $this->headerValue($headers, 'x-signature');
+
         if (!$nonceStr || !$timestamp || !$sigHeader) {
             return false;
         }
 
         // x-signature: "sha256 <base64>"
+        $sigHeader = trim($sigHeader);
         if (!str_contains($sigHeader, ' ')) {
             return false;
         }
-        [, $signatureBody] = explode(' ', trim($sigHeader), 2);
 
+        [$sigTypeFromHeader, $signatureBody] = explode(' ', $sigHeader, 2);
+        $sigTypeFromHeader = strtolower(trim($sigTypeFromHeader)); // sha256
+        $signatureBody     = trim($signatureBody);
+
+        // 取 body JSON（用整个 body，不只 data）
         $decoded = json_decode($rawBody, true);
-        if (!is_array($decoded) || !isset($decoded['data'])) {
-            return false;
-        }
+        if (!is_array($decoded)) return false;
 
-        // ✅ 只用 payload.data
-        $sorted  = $this->ksortRecursive($decoded['data']);
+        $sorted  = $this->ksortRecursive($decoded);
+
         $compact = json_encode($sorted, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         if ($compact === false) return false;
 
+        // RM doc 的特殊字符替换
         $compact = str_replace(['<', '>', '&'], ['\u003c', '\u003e', '\u0026'], $compact);
 
+        $dataB64 = base64_encode($compact);
+
+        // RM doc：callback 可以 skip requestUrl，但 signType 建议保留
         $plain =
-            'data=' . base64_encode($compact)
+            'data=' . $dataB64
             . '&method=post'
             . '&nonceStr=' . $nonceStr
+            . '&signType=' . $sigTypeFromHeader
             . '&timestamp=' . $timestamp;
 
         $sigBin = base64_decode($signatureBody, true);
         if ($sigBin === false) return false;
 
-        $pubKey = config('services.rm.public_key');
-        if (!$pubKey) return false;
-
         $pubKeyRes = $this->loadPublicKeyForRm();
+
         return openssl_verify($plain, $sigBin, $pubKeyRes, OPENSSL_ALGO_SHA256) === 1;
     }
 
@@ -492,15 +498,22 @@ class RevenueMonsterController extends Controller
         return null;
     }
 
-    private function ksortRecursive(array $data): array
+    private function ksortRecursive($data)
     {
+        if (!is_array($data)) return $data;
+
+        // 判断 associative array（object）才排序
+        $isAssoc = array_keys($data) !== range(0, count($data) - 1);
+
         foreach ($data as $k => $v) {
             if (is_array($v)) {
                 $data[$k] = $this->ksortRecursive($v);
             }
         }
 
-        ksort($data);
+        if ($isAssoc) {
+            ksort($data);
+        }
 
         return $data;
     }
