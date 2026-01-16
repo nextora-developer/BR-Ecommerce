@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Mail\AdminOrderNotificationMail;
 use App\Mail\OrderPlacedMail;
 use App\Models\Order;
-use App\Models\Voucher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -75,7 +74,7 @@ class RevenueMonsterController extends Controller
         // ✅ Payload
         $payload = [
             'storeId'       => $storeId,
-            'redirectUrl'   => $returnUrl,
+            'redirectUrl' => $returnUrl . '?order_no=' . urlencode($order->order_no),
             'notifyUrl'     => $webhookUrl,
             'layoutVersion' => 'v4',
             'type'          => 'WEB_PAYMENT',
@@ -173,11 +172,22 @@ class RevenueMonsterController extends Controller
 
     public function handleReturn(Request $request)
     {
-        // ✅ Return page: show message only, status update relies on webhook
+        $orderNo = $request->query('order_no');
+
+        if ($orderNo) {
+            $order = Order::where('order_no', $orderNo)->first();
+
+            if ($order && strtolower((string) $order->status) === 'pending') {
+                // ✅ 5分钟后检查：如果还是 pending 才 failed
+                MarkPendingOrderFailedIfUnpaid::dispatch($order->id)->delay(now()->addMinutes(5));
+            }
+        }
+
         return redirect()
             ->route('account.orders.index')
             ->with('success', 'We received your payment return. Your order will update once confirmed.');
     }
+
 
     public function handleWebhook(Request $request)
     {
@@ -244,9 +254,6 @@ class RevenueMonsterController extends Controller
         $failed  = ['FAILED', 'CANCELLED', 'EXPIRED'];
 
         if (in_array($status, $success, true)) {
-
-            $this->consumeVoucherIfAny($order);
-
             $order->update([
                 'status' => 'paid',
                 // 'paid_at' => now(), // enable if you have this field
@@ -265,29 +272,6 @@ class RevenueMonsterController extends Controller
 
         return response()->json(['ok' => true]);
     }
-
-    private function consumeVoucherIfAny(Order $order): void
-    {
-        // 你按自己结构改字段名
-        if (!$order->voucher_code && !$order->voucher_id) return;
-
-        // ✅ 幂等：避免 webhook 重复扣
-        if (!empty($order->voucher_consumed_at)) return;
-
-        // 示例：你如果有 Voucher 模型 & uses 字段
-        $voucher = $order->voucher_id
-            ? Voucher::find($order->voucher_id)
-            : Voucher::where('code', $order->voucher_code)->first();
-
-        if ($voucher) {
-            $voucher->increment('uses');
-        }
-
-        $order->update([
-            'voucher_consumed_at' => now(),
-        ]);
-    }
-
 
     /**
      * OAuth: client_credentials -> accessToken (cached)
