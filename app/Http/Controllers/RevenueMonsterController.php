@@ -432,66 +432,98 @@ class RevenueMonsterController extends Controller
     }
 
     /**
-     * Verify callback(webhook)
-     * Note: RM webhook X-Signature might contain "sha256 <base64>" or just "<base64>"
+     * Verify RM webhook callback signature
+     * - Follow RM doc param order
+     * - Try both: whole body and body.data (RM versions differ)
      */
     private function verifySignatureCallback(string $rawBody, array $headers): bool
     {
         $nonceStr  = $this->headerValue($headers, 'x-nonce-str');
         $timestamp = $this->headerValue($headers, 'x-timestamp');
         $sigHeader = $this->headerValue($headers, 'x-signature');
-        $signType  = strtolower($this->headerValue($headers, 'x-sign-type') ?? 'sha256');
 
         if (!$nonceStr || !$timestamp || !$sigHeader) {
             return false;
         }
 
-        // x-signature: "sha256 <base64>" OR "<base64>"
         $sigHeader = trim($sigHeader);
+
+        // x-signature: "sha256 <base64>" OR "<base64>"
+        $signType = 'sha256';
+        $signatureBody = $sigHeader;
+
         if (str_contains($sigHeader, ' ')) {
-            [, $signatureBody] = explode(' ', $sigHeader, 2);
-            $signatureBody = trim($signatureBody);
-        } else {
-            $signatureBody = $sigHeader;
+            [$maybeType, $b64] = explode(' ', $sigHeader, 2);
+            $maybeType = strtolower(trim($maybeType));
+            if ($maybeType !== '') $signType = $maybeType;
+            $signatureBody = trim($b64);
         }
 
         $sigBin = base64_decode($signatureBody, true);
-        if ($sigBin === false) {
-            return false;
-        }
+        if ($sigBin === false) return false;
 
-        // ✅ 文档：data = base64(排序后的整个body compact json)
         $decoded = json_decode($rawBody, true);
-        if (!is_array($decoded)) {
-            return false;
+        if (!is_array($decoded)) return false;
+
+        // Build base64(data) from array with RM rules
+        $makeDataB64 = function (array $arr): ?string {
+            $sorted = $this->ksortRecursive($arr);
+
+            $compact = json_encode($sorted, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            if ($compact === false) return null;
+
+            // RM doc: replace special chars
+            $compact = str_replace(['<', '>', '&'], ['\u003c', '\u003e', '\u0026'], $compact);
+
+            return base64_encode($compact);
+        };
+
+        // RM might sign whole body OR only the data object
+        $candidateBodies = [$decoded];
+        if (isset($decoded['data']) && is_array($decoded['data'])) {
+            $candidateBodies[] = $decoded['data'];
         }
 
-        $sorted  = $this->ksortRecursive($decoded);
-        $compact = json_encode($sorted, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        if ($compact === false) {
-            return false;
-        }
-
-        // RM doc: replace special chars
-        $compact = str_replace(['<', '>', '&'], ['\u003c', '\u003e', '\u0026'], $compact);
-        $dataB64 = base64_encode($compact);
-
-        // ✅ callback 验签：requestUrl 可以 skip（按你贴的 doc）
-        // ✅ 参数顺序尽量跟 doc 一样
-        $plain = 'data=' . $dataB64
-            . '&method=post'
-            . '&nonceStr=' . $nonceStr
-            . '&signType=' . $signType
-            . '&timestamp=' . $timestamp;
-
+        // Load public key (make sure this returns OpenSSLAsymmetricKey)
         try {
-            $pubKey = $this->loadPublicKeyForRm(); // ✅ 转成 OpenSSL key
+            $pubKey = $this->loadPublicKeyForRm();
         } catch (\Throwable $e) {
-            Log::error('RM public key load failed', ['err' => $e->getMessage()]);
+            \Log::error('RM public key load failed', ['err' => $e->getMessage()]);
             return false;
         }
 
-        return openssl_verify($plain, $sigBin, $pubKey, OPENSSL_ALGO_SHA256) === 1;
+        foreach ($candidateBodies as $bodyArr) {
+            $dataB64 = $makeDataB64($bodyArr);
+            if (!$dataB64) continue;
+
+            /**
+             * ✅ RM doc param order (callback: requestUrl can be skipped)
+             * data=...&method=post&nonceStr=...&signType=sha256&timestamp=...
+             */
+            $plainWithSignType =
+                'data=' . $dataB64
+                . '&method=post'
+                . '&nonceStr=' . $nonceStr
+                . '&signType=' . strtolower($signType)
+                . '&timestamp=' . $timestamp;
+
+            // Some implementations might omit signType in callback
+            $plainNoSignType =
+                'data=' . $dataB64
+                . '&method=post'
+                . '&nonceStr=' . $nonceStr
+                . '&timestamp=' . $timestamp;
+
+            if (openssl_verify($plainWithSignType, $sigBin, $pubKey, OPENSSL_ALGO_SHA256) === 1) {
+                return true;
+            }
+
+            if (openssl_verify($plainNoSignType, $sigBin, $pubKey, OPENSSL_ALGO_SHA256) === 1) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
 
