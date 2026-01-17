@@ -442,9 +442,7 @@ class RevenueMonsterController extends Controller
         $timestamp = $this->headerValue($headers, 'x-timestamp');
         $sigHeader = $this->headerValue($headers, 'x-signature');
 
-        if (!$nonceStr || !$timestamp || !$sigHeader) {
-            return false;
-        }
+        if (!$nonceStr || !$timestamp || !$sigHeader) return false;
 
         $sigHeader = trim($sigHeader);
 
@@ -465,66 +463,78 @@ class RevenueMonsterController extends Controller
         $decoded = json_decode($rawBody, true);
         if (!is_array($decoded)) return false;
 
-        // Build base64(data) from array with RM rules
-        $makeDataB64 = function (array $arr): ?string {
+        // ✅ 两种 JSON 编码：RM 端可能用默认（会把 / 变成 \/），也可能不转义 /
+        $jsonFlagsList = [
+            JSON_UNESCAPED_UNICODE, // 默认 slash 转义（最常见）
+            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES, // 不转义 slash
+        ];
+
+        $makeDataB64Variants = function (array $arr) use ($jsonFlagsList): array {
             $sorted = $this->ksortRecursive($arr);
+            $out = [];
 
-            $compact = json_encode($sorted, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-            if ($compact === false) return null;
+            foreach ($jsonFlagsList as $flags) {
+                $compact = json_encode($sorted, $flags);
+                if ($compact === false) continue;
 
-            // RM doc: replace special chars
-            $compact = str_replace(['<', '>', '&'], ['\u003c', '\u003e', '\u0026'], $compact);
+                // RM doc: replace <>&
+                $compact = str_replace(['<', '>', '&'], ['\u003c', '\u003e', '\u0026'], $compact);
 
-            return base64_encode($compact);
+                $out[] = base64_encode($compact);
+            }
+
+            return array_values(array_unique($out));
         };
 
-        // RM might sign whole body OR only the data object
+        // RM 可能签 whole body 或只签 data
         $candidateBodies = [$decoded];
         if (isset($decoded['data']) && is_array($decoded['data'])) {
             $candidateBodies[] = $decoded['data'];
         }
 
-        // Load public key (make sure this returns OpenSSLAsymmetricKey)
+        // callback 文档说 requestUrl 可以 skip，但有些实现会带（用你的 notifyUrl）
+        $webhookUrl = 'https://brif.my/api/payment/rm/webhook';
+
         try {
             $pubKey = $this->loadPublicKeyForRm();
         } catch (\Throwable $e) {
-            \Log::error('RM public key load failed', ['err' => $e->getMessage()]);
+            Log::error('RM public key load failed', ['err' => $e->getMessage()]);
             return false;
         }
 
         foreach ($candidateBodies as $bodyArr) {
-            $dataB64 = $makeDataB64($bodyArr);
-            if (!$dataB64) continue;
+            foreach ($makeDataB64Variants($bodyArr) as $dataB64) {
 
-            /**
-             * ✅ RM doc param order (callback: requestUrl can be skipped)
-             * data=...&method=post&nonceStr=...&signType=sha256&timestamp=...
-             */
-            $plainWithSignType =
-                'data=' . $dataB64
-                . '&method=post'
-                . '&nonceStr=' . $nonceStr
-                . '&signType=' . strtolower($signType)
-                . '&timestamp=' . $timestamp;
+                // ✅ 文档顺序（带 signType）
+                $plainA = 'data=' . $dataB64
+                    . '&method=post'
+                    . '&nonceStr=' . $nonceStr
+                    . '&signType=' . strtolower($signType)
+                    . '&timestamp=' . $timestamp;
 
-            // Some implementations might omit signType in callback
-            $plainNoSignType =
-                'data=' . $dataB64
-                . '&method=post'
-                . '&nonceStr=' . $nonceStr
-                . '&timestamp=' . $timestamp;
+                // ✅ 文档顺序（不带 signType）
+                $plainB = 'data=' . $dataB64
+                    . '&method=post'
+                    . '&nonceStr=' . $nonceStr
+                    . '&timestamp=' . $timestamp;
 
-            if (openssl_verify($plainWithSignType, $sigBin, $pubKey, OPENSSL_ALGO_SHA256) === 1) {
-                return true;
-            }
+                // ✅ 少数情况 callback 也带 requestUrl（用你的 webhook url）
+                $plainC = 'data=' . $dataB64
+                    . '&method=post'
+                    . '&nonceStr=' . $nonceStr
+                    . '&signType=' . strtolower($signType)
+                    . '&timestamp=' . $timestamp
+                    . '&requestUrl=' . $webhookUrl;
 
-            if (openssl_verify($plainNoSignType, $sigBin, $pubKey, OPENSSL_ALGO_SHA256) === 1) {
-                return true;
+                if (openssl_verify($plainA, $sigBin, $pubKey, OPENSSL_ALGO_SHA256) === 1) return true;
+                if (openssl_verify($plainB, $sigBin, $pubKey, OPENSSL_ALGO_SHA256) === 1) return true;
+                if (openssl_verify($plainC, $sigBin, $pubKey, OPENSSL_ALGO_SHA256) === 1) return true;
             }
         }
 
         return false;
     }
+
 
 
     private function headerValue(array $headers, string $key): ?string
