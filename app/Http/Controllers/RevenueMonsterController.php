@@ -309,31 +309,84 @@ class RevenueMonsterController extends Controller
     /**
      * Sign request (RSA SHA256) following RM convention
      */
+    // private function signRequest(
+    //     array $payload,
+    //     string $method,
+    //     string $nonceStr,
+    //     string $timestamp,
+    //     string $signType,
+    //     string $requestUrl // ✅ full URL
+    // ): string {
+    //     $sorted = $this->ksortRecursive($payload);
+
+    //     $compact = json_encode($sorted, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    //     if ($compact === false) {
+    //         throw new \RuntimeException('RM json_encode failed.');
+    //     }
+
+    //     // RM doc: replace special chars
+    //     $compact = str_replace(
+    //         ['<', '>', '&'],
+    //         ['\u003c', '\u003e', '\u0026'],
+    //         $compact
+    //     );
+
+    //     $dataB64 = base64_encode($compact);
+
+    //     // IMPORTANT: param order
+    //     $plain = 'data=' . $dataB64
+    //         . '&method=' . strtolower($method)
+    //         . '&nonceStr=' . $nonceStr
+    //         . '&requestUrl=' . $requestUrl
+    //         . '&signType=' . strtolower($signType)
+    //         . '&timestamp=' . $timestamp;
+
+    //     $privKey = $this->loadPrivateKeyForRm();
+
+    //     $sig = '';
+    //     $ok = openssl_sign($plain, $sig, $privKey, OPENSSL_ALGO_SHA256);
+
+    //     if (!$ok || $sig === '') {
+    //         throw new \RuntimeException('RM openssl_sign failed.');
+    //     }
+
+    //     return base64_encode($sig);
+    // }
+
     private function signRequest(
         array $payload,
         string $method,
         string $nonceStr,
         string $timestamp,
         string $signType,
-        string $requestUrl // ✅ full URL
+        string $requestUrl
     ): string {
+        // 1) Sort keys (nested), but do NOT reorder list arrays
         $sorted = $this->ksortRecursive($payload);
 
-        $compact = json_encode($sorted, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        if ($compact === false) {
-            throw new \RuntimeException('RM json_encode failed.');
-        }
-
-        // RM doc: replace special chars
-        $compact = str_replace(
-            ['<', '>', '&'],
-            ['\u003c', '\u003e', '\u0026'],
-            $compact
+        // 2) Encode compact JSON
+        // - DO NOT use JSON_UNESCAPED_SLASHES (RM examples escape / as \/ )
+        // - Use HEX flags for < > & to become \u003c \u003e \u0026
+        $compact = json_encode(
+            $sorted,
+            JSON_UNESCAPED_UNICODE
+                | JSON_HEX_TAG
+                | JSON_HEX_AMP
+                | JSON_HEX_APOS
+                | JSON_HEX_QUOT
         );
 
+        if ($compact === false) {
+            throw new \RuntimeException('RM json_encode failed: ' . json_last_error_msg());
+        }
+
+        // Normalize \u003C/\u003E to lowercase to match RM doc style
+        $compact = str_replace(['\\u003C', '\\u003E'], ['\\u003c', '\\u003e'], $compact);
+
+        // 3) Base64
         $dataB64 = base64_encode($compact);
 
-        // IMPORTANT: param order
+        // 4) Plain text (order must match RM doc)
         $plain = 'data=' . $dataB64
             . '&method=' . strtolower($method)
             . '&nonceStr=' . $nonceStr
@@ -341,17 +394,28 @@ class RevenueMonsterController extends Controller
             . '&signType=' . strtolower($signType)
             . '&timestamp=' . $timestamp;
 
+        // 5) Sign
         $privKey = $this->loadPrivateKeyForRm();
 
-        $sig = '';
-        $ok = openssl_sign($plain, $sig, $privKey, OPENSSL_ALGO_SHA256);
+        $sigBin = '';
+        $ok = openssl_sign($plain, $sigBin, $privKey, OPENSSL_ALGO_SHA256);
 
-        if (!$ok || $sig === '') {
+        if (!$ok || $sigBin === '') {
+            while ($m = openssl_error_string()) {
+                Log::error('OpenSSL(sign): ' . $m);
+            }
             throw new \RuntimeException('RM openssl_sign failed.');
         }
 
-        return base64_encode($sig);
+        Log::info('RM sign debug', [
+            'plain' => $plain,
+            'json' => $compact,
+        ]);
+
+
+        return base64_encode($sigBin);
     }
+
 
     /**
      * Load private key safely from env/config
@@ -557,15 +621,32 @@ class RevenueMonsterController extends Controller
         return null;
     }
 
+    // private function ksortRecursive(array $data): array
+    // {
+    //     foreach ($data as $k => $v) {
+    //         if (is_array($v)) {
+    //             $data[$k] = $this->ksortRecursive($v);
+    //         }
+    //     }
+
+    //     ksort($data);
+
+    //     return $data;
+    // }
+
     private function ksortRecursive(array $data): array
     {
+        $isAssoc = array_keys($data) !== range(0, count($data) - 1);
+
         foreach ($data as $k => $v) {
             if (is_array($v)) {
                 $data[$k] = $this->ksortRecursive($v);
             }
         }
 
-        ksort($data);
+        if ($isAssoc) {
+            ksort($data);
+        }
 
         return $data;
     }
