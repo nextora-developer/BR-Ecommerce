@@ -17,6 +17,159 @@ class RevenueMonsterController extends Controller
      * Create Hosted Payment Checkout
      * POST https://(sb-)open.revenuemonster.my/v3/payment/online
      */
+    // public function pay(Order $order)
+    // {
+    //     abort_unless(auth()->check(), 403);
+
+    //     if (!empty($order->user_id)) {
+    //         abort_unless((int) $order->user_id === (int) auth()->id(), 403);
+    //     }
+
+    //     if (strtolower((string) $order->status) !== 'pending') {
+    //         return redirect()
+    //             ->route('account.orders.show', $order)
+    //             ->with('error', 'This order is not payable.');
+    //     }
+
+    //     // ✅ Amount (cents)
+    //     $amountCents = (int) round(((float) ($order->total ?? 0)) * 100);
+
+    //     Log::info('RM amount debug', [
+    //         'order_no'         => $order->order_no,
+    //         'total_raw'        => $order->total,
+    //         'total_float'      => (float) $order->total,
+    //         'amount_cents'     => $amountCents,
+    //     ]);
+
+    //     if ($amountCents <= 0) {
+    //         Log::error('RM amount invalid', [
+    //             'order_no' => $order->order_no,
+    //             'total'    => $order->total,
+    //         ]);
+    //         return back()->with('error', 'Order amount invalid. Please contact support.');
+    //     }
+
+    //     // ✅ RM requires order.id to be 24 chars
+    //     $rmOrderId = Str::padLeft((string) $order->id, 24, '0');
+
+    //     // ✅ Config
+    //     $storeId    = (string) config('services.rm.store_id');
+    //     $apiBase    = (string) config('services.rm.api_base');
+    //     $returnUrl  = (string) config('services.rm.return_url');
+    //     $webhookUrl = (string) config('services.rm.webhook_url');
+
+    //     // ✅ OAuth token
+    //     $accessToken = $this->rmAccessToken();
+
+    //     Log::info('RM config snapshot', [
+    //         'store_id'       => $storeId,
+    //         'api_base'       => $apiBase,
+    //         'return_url'     => $returnUrl,
+    //         'webhook_url'    => $webhookUrl,
+    //         'order_no'       => $order->order_no,
+    //         'rm_order_id_24' => $rmOrderId,
+    //         'amount_cents'   => $amountCents,
+    //     ]);
+
+    //     // ✅ Payload
+    //     $payload = [
+    //         'storeId'       => $storeId,
+    //         'redirectUrl' => $returnUrl . '?order_no=' . urlencode($order->order_no),
+    //         'notifyUrl'     => $webhookUrl,
+    //         'layoutVersion' => 'v4',
+    //         'type'          => 'WEB_PAYMENT',
+    //         'order' => [
+    //             'id'             => $rmOrderId,
+    //             'title'          => Str::limit('Order ' . $order->order_no, 32, ''),
+    //             'currencyType'   => 'MYR',
+    //             'amount'         => $amountCents,
+    //             'detail'         => null,
+    //             'additionalData' => (string) $order->order_no,
+    //         ],
+    //         'customer' => [
+    //             'email'       => $order->customer_email ?? $order->email ?? null,
+    //             'countryCode' => '60',
+    //             'phoneNumber' => $order->customer_phone ?? $order->phone ?? null,
+    //         ],
+    //     ];
+
+    //     $endpoint  = rtrim($apiBase, '/') . '/v3/payment/online';
+    //     $nonceStr  = Str::random(32);
+    //     $timestamp = (string) time();
+    //     $signType  = 'sha256';
+
+    //     Log::info('RM signing request', [
+    //         'endpoint'    => $endpoint,
+    //         'nonce_len'   => strlen($nonceStr),
+    //         'timestamp'   => $timestamp,
+    //         'sign_type'   => $signType,
+    //         'payload_md5' => md5(json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)),
+    //     ]);
+
+    //     // ✅ Signature body (base64), header must include "sha256 " prefix
+    //     $signatureBody = $this->signRequest(
+    //         payload: $payload,
+    //         method: 'post',
+    //         nonceStr: $nonceStr,
+    //         timestamp: $timestamp,
+    //         signType: $signType,
+    //         requestUrl: $endpoint // ✅ full URL as RM doc
+    //     );
+
+    //     Log::info('RM signature generated', [
+    //         'signature_len'   => strlen($signatureBody),
+    //         'signature_head8' => substr($signatureBody, 0, 8),
+    //         'signature_tail8' => substr($signatureBody, -8),
+    //     ]);
+
+    //     $headers = [
+    //         'Accept'        => 'application/json',
+    //         'Content-Type'  => 'application/json',
+    //         'Authorization' => 'Bearer ' . $accessToken,
+    //         'X-Nonce-Str'   => $nonceStr,
+    //         'X-Timestamp'   => $timestamp,
+    //         'X-Sign-Type'   => $signType,
+    //         'X-Signature'   => strtolower($signType) . ' ' . $signatureBody,
+    //     ];
+
+    //     Log::info('RM request headers snapshot', [
+    //         'has_auth'  => !empty($accessToken),
+    //         'endpoint'  => $endpoint,
+    //         'nonce'     => $nonceStr,
+    //         'timestamp' => $timestamp,
+    //     ]);
+
+    //     $res  = Http::withHeaders($headers)->post($endpoint, $payload);
+    //     $data = $res->json();
+
+    //     Log::info('RM response snapshot', [
+    //         'http'     => $res->status(),
+    //         'ok'       => $res->ok(),
+    //         'json'     => $data,
+    //         'body'     => $res->body(),
+    //         'order_no' => $order->order_no,
+    //     ]);
+
+    //     if (!$res->ok() || data_get($data, 'code') !== 'SUCCESS') {
+    //         Log::error('RM create checkout failed', [
+    //             'http'     => $res->status(),
+    //             'json'     => $data,
+    //             'order_no' => $order->order_no,
+    //             'store_id' => $storeId,
+    //         ]);
+
+    //         return back()->with('error', data_get($data, 'error.message') ?? 'Unable to start payment.');
+    //     }
+
+    //     $redirectUrl = data_get($data, 'item.url');
+    //     if (!$redirectUrl) {
+    //         Log::error('RM missing item.url', ['json' => $data]);
+    //         return back()->with('error', 'Unable to start payment.');
+    //     }
+
+    //     return redirect()->away($redirectUrl);
+    // }
+
     public function pay(Order $order)
     {
         abort_unless(auth()->check(), 403);
@@ -35,10 +188,10 @@ class RevenueMonsterController extends Controller
         $amountCents = (int) round(((float) ($order->total ?? 0)) * 100);
 
         Log::info('RM amount debug', [
-            'order_no'         => $order->order_no,
-            'total_raw'        => $order->total,
-            'total_float'      => (float) $order->total,
-            'amount_cents'     => $amountCents,
+            'order_no'     => $order->order_no,
+            'total_raw'    => $order->total,
+            'total_float'  => (float) $order->total,
+            'amount_cents' => $amountCents,
         ]);
 
         if ($amountCents <= 0) {
@@ -71,56 +224,94 @@ class RevenueMonsterController extends Controller
             'amount_cents'   => $amountCents,
         ]);
 
-        // ✅ Payload
+        // ✅ Payload (fill required fields; avoid null)
         $payload = [
             'storeId'       => $storeId,
-            'redirectUrl' => $returnUrl . '?order_no=' . urlencode($order->order_no),
+            'redirectUrl'   => $returnUrl . '?order_no=' . urlencode($order->order_no),
             'notifyUrl'     => $webhookUrl,
             'layoutVersion' => 'v4',
             'type'          => 'WEB_PAYMENT',
+            'method'        => [],
+
             'order' => [
                 'id'             => $rmOrderId,
                 'title'          => Str::limit('Order ' . $order->order_no, 32, ''),
                 'currencyType'   => 'MYR',
                 'amount'         => $amountCents,
-                'detail'         => null,
+                'detail'         => '',
                 'additionalData' => (string) $order->order_no,
             ],
+
             'customer' => [
-                'email'       => $order->customer_email ?? $order->email ?? null,
+                'email'       => (string) ($order->customer_email ?? $order->email ?? ''),
                 'countryCode' => '60',
-                'phoneNumber' => $order->customer_phone ?? $order->phone ?? null,
+                'phoneNumber' => (string) ($order->customer_phone ?? $order->phone ?? ''),
             ],
         ];
+
+        // ✅ Optional: remove empty strings in customer (but KEEP countryCode)
+        $payload['customer'] = array_filter(
+            $payload['customer'],
+            fn($v, $k) => $k === 'countryCode' ? true : ($v !== ''),
+            ARRAY_FILTER_USE_BOTH
+        );
 
         $endpoint  = rtrim($apiBase, '/') . '/v3/payment/online';
         $nonceStr  = Str::random(32);
         $timestamp = (string) time();
         $signType  = 'sha256';
 
-        Log::info('RM signing request', [
-            'endpoint'    => $endpoint,
-            'nonce_len'   => strlen($nonceStr),
-            'timestamp'   => $timestamp,
-            'sign_type'   => $signType,
-            'payload_md5' => md5(json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)),
-        ]);
+        // ✅ Build EXACT JSON that will be sent (sorted + compact)
+        $sorted = $this->ksortRecursive($payload);
 
-        // ✅ Signature body (base64), header must include "sha256 " prefix
-        $signatureBody = $this->signRequest(
-            payload: $payload,
-            method: 'post',
-            nonceStr: $nonceStr,
-            timestamp: $timestamp,
-            signType: $signType,
-            requestUrl: $endpoint // ✅ full URL as RM doc
+        // Important: DO NOT use JSON_UNESCAPED_SLASHES (RM expects \/ usually)
+        $compactJson = json_encode(
+            $sorted,
+            JSON_UNESCAPED_UNICODE
+                | JSON_HEX_TAG
+                | JSON_HEX_AMP
+                | JSON_HEX_APOS
+                | JSON_HEX_QUOT
         );
 
-        Log::info('RM signature generated', [
-            'signature_len'   => strlen($signatureBody),
-            'signature_head8' => substr($signatureBody, 0, 8),
-            'signature_tail8' => substr($signatureBody, -8),
+        if ($compactJson === false) {
+            throw new \RuntimeException('RM json_encode failed: ' . json_last_error_msg());
+        }
+
+        // Normalize \u003C/\u003E to lowercase (RM doc uses lowercase)
+        $compactJson = str_replace(['\\u003C', '\\u003E'], ['\\u003c', '\\u003e'], $compactJson);
+
+        $dataB64 = base64_encode($compactJson);
+
+        $plain = 'data=' . $dataB64
+            . '&method=post'
+            . '&nonceStr=' . $nonceStr
+            . '&requestUrl=' . $endpoint
+            . '&signType=' . strtolower($signType)
+            . '&timestamp=' . $timestamp;
+
+        Log::info('RM sign debug', [
+            'endpoint'  => $endpoint,
+            'nonce_len' => strlen($nonceStr),
+            'timestamp' => $timestamp,
+            'json'      => $compactJson,
+            'plain'     => $plain,
         ]);
+
+        // ✅ Sign
+        $privKey = $this->loadPrivateKeyForRm();
+
+        $sigBin = '';
+        $ok = openssl_sign($plain, $sigBin, $privKey, OPENSSL_ALGO_SHA256);
+
+        if (!$ok || $sigBin === '') {
+            while ($m = openssl_error_string()) {
+                Log::error('OpenSSL(sign): ' . $m);
+            }
+            throw new \RuntimeException('RM openssl_sign failed.');
+        }
+
+        $signatureBody = base64_encode($sigBin);
 
         $headers = [
             'Accept'        => 'application/json',
@@ -128,8 +319,7 @@ class RevenueMonsterController extends Controller
             'Authorization' => 'Bearer ' . $accessToken,
             'X-Nonce-Str'   => $nonceStr,
             'X-Timestamp'   => $timestamp,
-            'X-Sign-Type'   => $signType,
-            'X-Signature'   => strtolower($signType) . ' ' . $signatureBody,
+            'X-Signature'   => 'sha256 ' . $signatureBody,
         ];
 
         Log::info('RM request headers snapshot', [
@@ -139,7 +329,11 @@ class RevenueMonsterController extends Controller
             'timestamp' => $timestamp,
         ]);
 
-        $res  = Http::withHeaders($headers)->post($endpoint, $payload);
+        // ✅ Send EXACT JSON that was signed
+        $res = Http::withHeaders($headers)
+            ->withBody($compactJson, 'application/json')
+            ->post($endpoint);
+
         $data = $res->json();
 
         Log::info('RM response snapshot', [
@@ -169,6 +363,7 @@ class RevenueMonsterController extends Controller
 
         return redirect()->away($redirectUrl);
     }
+
 
     public function handleReturn(Request $request)
     {
