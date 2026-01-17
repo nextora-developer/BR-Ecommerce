@@ -532,6 +532,13 @@ class RevenueMonsterController extends Controller
             }
         }
 
+        Log::warning('RM verify failed meta', [
+            'nonce' => $nonceStr,
+            'ts' => $timestamp,
+            'sig_prefix' => substr($signatureBody, 0, 12),
+            'raw_md5' => md5($rawBody),
+        ]);
+
         return false;
     }
 
