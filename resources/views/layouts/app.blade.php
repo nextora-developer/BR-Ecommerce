@@ -139,7 +139,7 @@
                     <div class="h-px w-10 bg-white/15 mt-4 mb-6"></div>
 
                     <ul class="space-y-4">
-                        @foreach ([['label' => 'Official Site', 'route' => 'https://brif.cloud'], ['label' => 'Reward Point', 'route' => route('reward-point')], ['label' => 'Voucher', 'route' => route('vouchers.index')], ['label' => 'Guideline', 'route' => route('guideline')], ['label' => 'Faq', 'route' => route('faq')]] as $item)
+                        @foreach ([['label' => 'Official Site', 'route' => 'https://brif.cloud'], ['label' => 'Reward Point', 'route' => route('reward-point')], ['label' => 'Voucher', 'route' => route('vouchers.index')], ['label' => 'Verify Agent', 'route' => route('agents.index')], ['label' => 'Guideline', 'route' => route('guideline')], ['label' => 'Faq', 'route' => route('faq')]] as $item)
                             <li>
                                 <a href="{{ $item['route'] }}"
                                     class="text-sm text-gray-300 hover:text-white transition relative inline-block
