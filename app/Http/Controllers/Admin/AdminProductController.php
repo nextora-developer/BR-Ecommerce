@@ -192,6 +192,9 @@ class AdminProductController extends Controller
             $this->syncOptionsFromVariants($product, []);
         }
 
+        // dd($request->allFiles(), $request->file('images'));
+
+
         // 处理多图上传：存去 product_images，并设第一张为封面
         if (!empty($imagesInput)) {
             foreach ($imagesInput as $index => $file) {
