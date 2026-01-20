@@ -669,8 +669,7 @@
 
                                     <div id="handlingFeeRow" class="hidden flex justify-between text-sm">
                                         <span class="text-gray-500">
-                                            {{ $handlingLabel }} (<span
-                                                id="handlingPercentText">{{ number_format($handlingPercent, 0) }}</span>%)
+                                            {{ $handlingLabel }} 
                                         </span>
                                         <span class="font-bold text-gray-900 text-right">
                                             RM <span id="handlingFeeText">0.00</span>
