@@ -50,7 +50,12 @@ class RevenueMonsterController extends Controller
         }
 
         // ✅ RM requires order.id to be 24 chars
-        $rmOrderId = Str::padLeft((string) $order->id, 24, '0');
+        if (empty($order->rm_order_id_24)) {
+            $order->rm_order_id_24 = $this->generateRmOrderId24();
+            $order->save();
+        }
+
+        $rmOrderId = $order->rm_order_id_24; // exactly 24 chars
 
         // ✅ Config
         $storeId    = (string) config('services.rm.store_id');
@@ -334,18 +339,16 @@ class RevenueMonsterController extends Controller
         // ✅ 2) Find order (prefer additionalData = order_no)
         $order = null;
 
-        $orderNo = data_get($payload, 'data.order.additionalData');
-        if ($orderNo) {
+        $orderNo = (string) data_get($payload, 'data.order.additionalData', '');
+        if ($orderNo !== '') {
             $order = Order::where('order_no', $orderNo)->first();
         }
 
+        // ✅ Fallback: match by rm_order_id_24 (because RM order.id is now RMxxxxxxxx... 24 chars)
         if (!$order) {
-            $rmOrderId = data_get($payload, 'data.order.id');
-            if ($rmOrderId) {
-                $numericId = (int) ltrim((string) $rmOrderId, '0');
-                if ($numericId > 0) {
-                    $order = Order::find($numericId);
-                }
+            $rmOrderId = (string) data_get($payload, 'data.order.id', '');
+            if ($rmOrderId !== '') {
+                $order = Order::where('rm_order_id_24', $rmOrderId)->first();
             }
         }
 
@@ -356,6 +359,7 @@ class RevenueMonsterController extends Controller
             ]);
             return response()->json(['ok' => true]);
         }
+
 
         // ✅ 3) Idempotent
         if (strtolower((string) $order->status) === 'paid') {
@@ -452,6 +456,11 @@ class RevenueMonsterController extends Controller
         return response()->json(['ok' => true]);
     }
 
+    private function generateRmOrderId24(): string
+    {
+        // RM + 22 random alphanumeric chars = 24 chars total
+        return 'RM' . strtoupper(Str::random(22));
+    }
 
     /**
      * OAuth: client_credentials -> accessToken (cached)
