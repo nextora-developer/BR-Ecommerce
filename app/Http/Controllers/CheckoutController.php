@@ -9,6 +9,7 @@ use App\Models\ShippingRate;
 use App\Models\Voucher;
 use App\Models\PointTransaction;
 use App\Models\User;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Mail\OrderPlacedMail;
@@ -31,6 +32,13 @@ class CheckoutController extends Controller
 
         $items    = $cart->items;
         $subtotal = $items->sum(fn($i) => $i->unit_price * $i->qty);
+
+        $handlingEnabled = (int) Setting::get('handling_fee_enabled', 0) === 1;
+        $handlingPercent = (float) Setting::get('handling_fee_percent', 10);
+        $handlingPercent = max(0, min($handlingPercent, 100));
+        $handlingLabel = (string) Setting::get('handling_fee_label', 'Handling Fee');
+
+        $gatewayCodes = ['revenue_monster', 'hitpay']; // 跟 store() 一样
 
         $user           = auth()->user();
         $defaultAddress = $user?->defaultAddress;
@@ -85,6 +93,10 @@ class CheckoutController extends Controller
             'shippingRates',
             'hasPhysical',
             'states',
+            'handlingEnabled',
+            'handlingPercent',
+            'handlingLabel',
+            'gatewayCodes'
         ));
     }
 
@@ -137,6 +149,18 @@ class CheckoutController extends Controller
 
         $items    = $cart->items;
         $subtotal = (float) $items->sum(fn($i) => $i->unit_price * $i->qty);
+
+        $gatewayCodes = ['revenue_monster', 'hitpay']; // ✅ 你要的 gateway code 放这里
+        $isGateway = in_array($paymentMethod->code, $gatewayCodes, true);
+
+        $handlingEnabled = (int) Setting::get('handling_fee_enabled', 0) === 1;
+        $handlingPercent = (float) Setting::get('handling_fee_percent', 10);
+        $handlingPercent = max(0, min($handlingPercent, 100));
+
+        // ✅ 只有 Gateway 才加
+        $handlingFee = ($handlingEnabled && $isGateway)
+            ? round($subtotal * ($handlingPercent / 100), 2)
+            : 0.0;
 
         // 是否包含实体产品
         $hasPhysical = $items->contains(fn($item) => !$item->product->is_digital);
@@ -218,7 +242,8 @@ class CheckoutController extends Controller
         $pointsDiscount = min($pointsRedeem / 100, $payableSubtotal);
         $payableSubtotal = max(0, $payableSubtotal - $pointsDiscount);
 
-        $total = $payableSubtotal + $payableShipping;
+        $total = round($payableSubtotal + $payableShipping + $handlingFee, 2);
+
 
 
 
@@ -263,6 +288,10 @@ class CheckoutController extends Controller
             $shippingDiscount,
             $pointsRedeem,
             $pointsDiscount,
+            $handlingFee,
+            $handlingPercent,
+            $handlingEnabled,
+            $isGateway,
             &$order
         ) {
             $order = Order::create([
@@ -289,8 +318,12 @@ class CheckoutController extends Controller
                 'payment_method_name' => $paymentMethod->name,
                 'payment_receipt_path' => $receiptPath,
                 'remark'               => $request->input('remark'),
-                'points_redeem'   => $pointsRedeem,
-                'points_discount' => $pointsDiscount,
+                'points_redeem'         => $pointsRedeem,
+                'points_discount'       => $pointsDiscount,
+                'handling_fee'         => $handlingFee,
+                'handling_fee_percent' => $handlingPercent,
+                'handling_fee_enabled' => ($handlingEnabled && $isGateway),
+
             ]);
 
             if ($pointsRedeem > 0) {

@@ -87,7 +87,10 @@
                     request()->routeIs('admin.products.*') ||
                     request()->routeIs('admin.vouchers.*');
                 $isContent = request()->routeIs('admin.banners.*') || request()->routeIs('admin.popup-banners.*');
-                $isSettings = request()->routeIs('admin.payment-methods.*') || request()->routeIs('admin.shipping.*');
+                $isSettings =
+                    request()->routeIs('admin.payment-methods.*') ||
+                    request()->routeIs('admin.shipping.*') ||
+                    request()->routeIs('admin.fees.*');
             @endphp
 
 
@@ -278,6 +281,12 @@
                             class="{{ $subBase }} {{ request()->routeIs('admin.shipping.*') ? $subActive : $subIdle }}">
                             <span class="h-2 w-2 rounded-full bg-[#D4AF37]/60"></span>
                             Shipping Fee
+                        </a>
+
+                        <a href="{{ route('admin.fees.handling') }}"
+                            class="{{ $subBase }} {{ request()->routeIs('admin.fees.*') ? $subActive : $subIdle }}">
+                            <span class="h-2 w-2 rounded-full bg-[#D4AF37]/60"></span>
+                            Handling Fee
                         </a>
                     </div>
                 </div>

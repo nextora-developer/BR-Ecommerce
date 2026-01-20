@@ -25,7 +25,9 @@ use App\Http\Controllers\Admin\AdminVoucherController;
 use App\Http\Controllers\Admin\AdminPopupBannerController;
 use App\Http\Controllers\Admin\AdminPointTransactionController;
 use App\Http\Controllers\Admin\AdminOrderInvoiceController;
-use App\Http\Controllers\Admin\AdminAgentController;
+use App\Http\Controllers\Admin\AdminAgentController; 
+use App\Http\Controllers\Admin\AdminHandlingFeeController; 
+
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AccountOrderController;
@@ -101,7 +103,7 @@ Route::post('/voucher/remove', [VoucherController::class, 'remove'])->name('vouc
 
 Route::get('/verify-agent', [PublicAgentController::class, 'index'])
     ->name('agents.index');
-    Route::get('/verify-agent/pdf', [PublicAgentController::class, 'pdf'])
+Route::get('/verify-agent/pdf', [PublicAgentController::class, 'pdf'])
     ->name('agents.verify.pdf');
 
 
@@ -279,6 +281,12 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
 
     // Agents
     Route::resource('agents', AdminAgentController::class)->except(['show']);
+
+    // Handling fee
+    Route::get('fees/handling', [AdminHandlingFeeController::class, 'index'])
+        ->name('fees.handling');
+    Route::post('fees/handling', [AdminHandlingFeeController::class, 'update'])
+        ->name('fees.handling.update');
 });
 
 /*

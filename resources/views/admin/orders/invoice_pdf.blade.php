@@ -286,6 +286,21 @@
                             </td>
                         </tr>
 
+                        {{-- ✅ Handling Fee (Gateway only) --}}
+                        @if (($order->handling_fee ?? 0) > 0)
+                            <tr class="total-row">
+                                <td class="muted">
+                                    Handling Fee
+                                    @if (($order->handling_fee_percent ?? 0) > 0)
+                                        ({{ rtrim(rtrim(number_format((float) $order->handling_fee_percent, 2), '0'), '.') }}%)
+                                    @endif
+                                </td>
+                                <td class="right">
+                                    RM {{ number_format((float) $order->handling_fee, 2) }}
+                                </td>
+                            </tr>
+                        @endif
+
                         @if (($order->voucher_discount ?? 0) > 0)
                             <tr class="total-row">
                                 <td class="muted">Voucher Discount</td>

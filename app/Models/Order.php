@@ -59,6 +59,10 @@ class Order extends Model
         'rm_currency',
         'rm_transaction_at',
         'rm_raw_payload',
+
+        'handling_fee',
+        'handling_fee_percent',
+        'handling_fee_enabled',
     ];
 
     protected $casts = [

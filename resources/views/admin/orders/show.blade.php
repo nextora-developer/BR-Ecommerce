@@ -242,6 +242,26 @@
                                     </span>
                                 </div>
 
+                                {{-- ✅ Handling Fee (Gateway only) --}}
+                                @if (($order->handling_fee ?? 0) > 0)
+                                    <div class="flex justify-between items-center text-sm">
+                                        <span class="text-gray-500 font-medium">
+                                            Handling Fee
+                                            @if (($order->handling_fee_percent ?? 0) > 0)
+                                                <span class="text-xs text-gray-400 font-bold ml-1">
+                                                    ({{ rtrim(rtrim(number_format((float) $order->handling_fee_percent, 2), '0'), '.') }}%)
+                                                </span>
+                                            @endif
+                                        </span>
+
+                                        <span class="font-bold tracking-tight text-gray-900">
+                                            <span class="text-sm text-gray-400 mr-0.5 font-normal">RM</span>
+                                            {{ number_format((float) $order->handling_fee, 2) }}
+                                        </span>
+                                    </div>
+                                @endif
+
+
                                 @if (($order->voucher_discount ?? 0) > 0)
                                     <div class="flex justify-between items-center text-sm">
                                         <span class="text-gray-500 font-medium flex items-center gap-1">

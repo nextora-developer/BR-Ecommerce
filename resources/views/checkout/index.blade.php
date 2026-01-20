@@ -667,6 +667,17 @@
                                         </span>
                                     </div>
 
+                                    <div id="handlingFeeRow" class="hidden flex justify-between text-sm">
+                                        <span class="text-gray-500">
+                                            {{ $handlingLabel }} (<span
+                                                id="handlingPercentText">{{ number_format($handlingPercent, 0) }}</span>%)
+                                        </span>
+                                        <span class="font-bold text-gray-900 text-right">
+                                            RM <span id="handlingFeeText">0.00</span>
+                                        </span>
+                                    </div>
+
+
                                     {{-- Voucher Summary Row (always exist, JS will toggle) --}}
                                     <div id="voucherRow" class="hidden flex justify-between text-sm">
                                         <span class="text-gray-500">
@@ -1104,6 +1115,13 @@
             const btnRemoveVoucher = document.getElementById('btnRemoveVoucher');
             const voucherCodeInput = document.getElementById('voucherCodeInput');
 
+            const handlingEnabled = @json($handlingEnabled);
+            const handlingPercent = Number(@json($handlingPercent));
+            const gatewayCodes = @json($gatewayCodes);
+            const handlingFeeRow = document.getElementById('handlingFeeRow');
+            const handlingFeeText = document.getElementById('handlingFeeText');
+
+
             if (!stateSelect || !shippingText || !totalText) return;
 
             // ✅ Voucher state 可变
@@ -1134,6 +1152,22 @@
                 if (currentVoucherBenefit === 'free_shipping' && hasPhysical) return shippingFee;
                 return 0;
             }
+
+            function getSelectedPaymentCode() {
+                return document.querySelector('.payment-radio:checked')?.value || '';
+            }
+
+            function isGatewaySelected() {
+                const code = getSelectedPaymentCode();
+                return gatewayCodes.includes(code);
+            }
+
+            function calcHandlingFee() {
+                if (!handlingEnabled) return 0;
+                if (!isGatewaySelected()) return 0;
+                return subtotal * (handlingPercent / 100);
+            }
+
 
             function renderShipping() {
                 if (!hasPhysical) {
@@ -1252,12 +1286,17 @@
                 const subtotalAfterPoints = Math.max(0, discountedSubtotal - pointsRm);
 
                 const payableShipping = Math.max(0, shippingFee - shippingDiscount);
-                const finalTotal = subtotalAfterPoints + payableShipping;
+                const handlingFee = calcHandlingFee();
+
+                const finalTotal = subtotalAfterPoints + payableShipping + handlingFee;
 
                 totalText.textContent = 'RM ' + finalTotal.toFixed(2);
                 if (payAmountEl) payAmountEl.textContent = 'RM ' + finalTotal.toFixed(2);
 
                 if (shippingDiscountText) shippingDiscountText.textContent = shippingDiscount.toFixed(2);
+
+                if (handlingFeeRow) handlingFeeRow.classList.toggle('hidden', handlingFee <= 0);
+                if (handlingFeeText) handlingFeeText.textContent = handlingFee.toFixed(2);
 
                 // Estimated Earn: 你现在是 RM1=1point（按 finalTotal）
                 if (cashbackPointsText) cashbackPointsText.textContent = String(Math.floor(finalTotal));
@@ -1295,6 +1334,10 @@
 
             // init
             refreshAll();
+
+            document.querySelectorAll('.payment-radio').forEach(r => {
+                r.addEventListener('change', refreshAll);
+            });
 
             // Apply voucher (no reload)
             if (btnApplyVoucher) {

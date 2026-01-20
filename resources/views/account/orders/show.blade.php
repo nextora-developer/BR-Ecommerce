@@ -294,6 +294,22 @@
                                         <span>RM {{ number_format($order->shipping_fee, 2) }}</span>
                                     </div>
 
+                                    {{-- ✅ Handling Fee (only if applied) --}}
+                                    @if (($order->handling_fee ?? 0) > 0)
+                                        <div class="flex justify-between text-gray-600">
+                                            <span>
+                                                Handling Fee
+                                                @if (($order->handling_fee_percent ?? 0) > 0)
+                                                    <span class="text-[11px] text-gray-400 font-semibold">
+                                                        ({{ rtrim(rtrim(number_format((float) $order->handling_fee_percent, 2), '0'), '.') }}%)
+                                                    </span>
+                                                @endif
+                                            </span>
+                                            <span>RM {{ number_format((float) $order->handling_fee, 2) }}</span>
+                                        </div>
+                                    @endif
+
+
                                     {{-- ✅ Voucher Discount --}}
                                     @if ($order->voucher_discount > 0)
                                         <div class="flex justify-between text-green-700 font-medium">
