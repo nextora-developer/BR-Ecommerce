@@ -80,7 +80,7 @@
                                 {{-- 🔳 Main Gallery (Square & Centered) --}}
                                 <div class="flex justify-center mb-6">
                                     <div
-                                        class="relative rounded-[28px] p-[2px] bg-[#D4AF37]">
+                                        class="relative rounded-[28px]">
                                         <div
                                             class="relative w-full max-w-[520px] aspect-square rounded-3xl overflow-hidden bg-white shadow-inner">
                                             <div class="flex h-full transition-transform duration-700 ease-out"

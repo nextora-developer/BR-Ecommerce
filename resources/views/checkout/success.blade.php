@@ -50,7 +50,7 @@
 
             {{-- Actions --}}
             <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                <a href="{{ route('account.orders.index') }}"
+                <a href="{{ route('account.orders.show', $order) }}"
                     class="group flex items-center justify-center px-8 py-4 rounded-full bg-black text-white text-sm font-bold transition-all hover:bg-gray-800 hover:shadow-lg active:scale-95">
                     Track My Order
                     <svg class="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
