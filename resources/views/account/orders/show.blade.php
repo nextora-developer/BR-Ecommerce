@@ -30,9 +30,14 @@
 
                             {{-- 左侧：订单号 + 时间 --}}
                             <div>
-                                <h1 class="text-xl md:text-2xl font-semibold text-[#0A0A0C] flex items-center gap-2">
-                                    Order <span class="text-[#8f6a10]">#{{ $order->order_no }}</span>
+                                <h1
+                                    class="text-xl md:text-2xl font-semibold text-[#0A0A0C] flex flex-col md:flex-row md:items-center gap-1 md:gap-2">
+                                    <span>Order</span>
+                                    <span class="text-[#8f6a10] break-all">
+                                        #{{ $order->order_no }}
+                                    </span>
                                 </h1>
+
 
                                 <p class="text-sm text-gray-500 mt-1">
                                     Placed on {{ $order->created_at->format('d M Y, H:i') }}
@@ -139,12 +144,10 @@
                             $steps = $allSteps;
                             unset($steps['cancelled'], $steps['failed']);
 
-                            // ⭐ 如果是 cancelled → 只加入 cancelled
+                            // ⭐ cancelled / failed 才追加
                             if ($status === 'cancelled') {
                                 $steps['cancelled'] = $allSteps['cancelled'];
                             }
-
-                            // ⭐ 如果是 failed → 只加入 failed
                             if ($status === 'failed') {
                                 $steps['failed'] = $allSteps['failed'];
                             }
@@ -153,9 +156,7 @@
                             $currentIndex = array_search($status, $orderFlow);
                         @endphp
 
-
-
-                        <div class="mt-10 mb-12 px-2">
+                        <div class="mt-10 mb-12 px-1 sm:px-2">
                             <div class="flex items-center">
                                 @foreach ($steps as $key => $data)
                                     @php
@@ -166,36 +167,45 @@
 
                                     <div class="flex items-center {{ !$isLast ? 'flex-1' : '' }}">
                                         {{-- Step Point --}}
-                                        <div class="relative flex flex-col items-center group">
+                                        <div class="relative flex flex-col items-center">
                                             <div
-                                                class="w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-500 border
+                                                class="w-8 h-8 sm:w-10 sm:h-10
+                               rounded-xl sm:rounded-2xl
+                               flex items-center justify-center transition-all duration-500 border
                         {{ $isDone
                             ? 'bg-black border-black text-white shadow-lg shadow-black/20'
                             : 'bg-white border-gray-300 text-gray-500' }}">
 
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                                <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor"
                                                     viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                         stroke-width="1.5" d="{{ $data['icon'] }}" />
                                                 </svg>
                                             </div>
 
-                                            {{-- Label --}}
+                                            {{-- Label (mobile tighter) --}}
                                             <div class="absolute -bottom-7 whitespace-nowrap">
                                                 <span
-                                                    class="text-[9px] font-black uppercase tracking-[0.2em] transition-colors duration-300
+                                                    class="text-[8px] sm:text-[9px]
+                                   font-black uppercase
+                                   tracking-[0.12em] sm:tracking-[0.2em]
+                                   transition-colors duration-300
                             {{ $isDone ? 'text-black' : 'text-gray-500' }}">
                                                     {{ $data['label'] }}
                                                 </span>
                                             </div>
                                         </div>
 
-                                        {{-- Connector Line --}}
+                                        {{-- Connector Line (mobile shorter) --}}
                                         @if (!$isLast)
                                             <div
-                                                class="h-[2px] mx-2 md:mx-4 rounded-full overflow-hidden bg-gray-100 w-[16px] md:flex-1 flex-none">
+                                                class="h-[2px]
+                               mx-1 sm:mx-2 md:mx-4
+                               rounded-full overflow-hidden bg-gray-100
+                               w-4 sm:w-6 md:flex-1 flex-none">
                                                 <div
-                                                    class="h-full transition-all duration-1000 ease-out {{ $isDone && $currentIndex > $index ? 'w-full bg-[#D4AF37]' : 'w-0' }}">
+                                                    class="h-full transition-all duration-1000 ease-out
+                            {{ $isDone && $currentIndex > $index ? 'w-full bg-[#D4AF37]' : 'w-0' }}">
                                                 </div>
                                             </div>
                                         @endif
@@ -203,6 +213,7 @@
                                 @endforeach
                             </div>
                         </div>
+
                         {{-- 🔥 END STATUS BAR --}}
 
                         {{-- 3 : 2 Layout --}}
