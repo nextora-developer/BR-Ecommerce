@@ -2,22 +2,9 @@
     <section class="relative bg-[#F9F7F2] py-10 lg:py-10 overflow-hidden">
         {{-- High-End Background Composition --}}
         <div class="pointer-events-none absolute inset-0 z-0">
-            {{-- Primary Golden Glow (Centered Top) --}}
             <div class="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2">
                 <div class="w-[1000px] h-[600px] rounded-full bg-[#D4AF37]/10 blur-[100px]"></div>
             </div>
-
-            {{-- Secondary Soft Dark Glow (Side) --}}
-            <div class="absolute right-[-10%] top-[20%]">
-                <div class="w-[600px] h-[600px] rounded-full bg-black/[0.02] blur-[80px]"></div>
-            </div>
-
-            {{-- Structural Dot Grid --}}
-            <div class="absolute inset-0 opacity-[0.4]"
-                style="background-image: radial-gradient(circle at 1px 1px, rgba(15,23,42,.08) 1px, transparent 1px);
-                       background-size: 32px 32px;">
-            </div>
-
         </div>
 
         <div class="relative max-w-7xl5 mx-auto px-6">

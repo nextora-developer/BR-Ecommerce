@@ -1,5 +1,5 @@
 {{-- New Arrivals products --}}
-<section id="new-arrivals" class="bg-[#F9F7F2]">
+<section id="new-arrivals" class="bg-[#F3F1EC]">
     <div class="max-w-7xl5 mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-10">
 
         {{-- New Arrivals Header Section --}}

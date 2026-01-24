@@ -1,13 +1,11 @@
 {{-- Trust & Value Section --}}
-<section class="relative overflow-hidden bg-[#F9F7F2] py-10 lg:py-20">
+<section class="relative overflow-hidden bg-[#F9F7F2] py-10 lg:py-14">
     {{-- Refined Background Elements --}}
-    <div class="absolute inset-0 pointer-events-none select-none overflow-hidden">
-        {{-- Large Watermark Text --}}
+    {{-- <div class="absolute inset-0 pointer-events-none select-none overflow-hidden">
         <span class="absolute -bottom-10 -right-10 text-[18rem] font-black text-black/[0.02] leading-none uppercase">
             Trust
         </span>
 
-        {{-- Sophisticated Ambient Glows --}}
         <div
             class="absolute top-0 right-0 w-[700px] h-[700px] rounded-full bg-[#D4AF37]/5 blur-[120px] -translate-y-1/2 translate-x-1/3">
         </div>
@@ -15,23 +13,14 @@
             class="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full bg-black/[0.03] blur-[100px] translate-y-1/3 -translate-x-1/4">
         </div>
 
-        {{-- Abstract Fine Lines (SVG Pattern) --}}
         <svg class="absolute top-0 left-0 w-full h-full opacity-[0.05]" viewBox="0 0 100 100" preserveAspectRatio="none">
             <path d="M0 20 Q 25 10, 50 20 T 100 20" fill="none" stroke="black" stroke-width="0.05" />
             <path d="M0 50 Q 25 40, 50 50 T 100 50" fill="none" stroke="black" stroke-width="0.05" />
             <path d="M0 80 Q 25 70, 50 80 T 100 80" fill="none" stroke="black" stroke-width="0.05" />
         </svg>
-    </div>
+    </div> --}}
 
     <div class="relative max-w-7xl5 mx-auto px-6">
-        {{-- Section Header: Minimalist & Clean --}}
-        <div class="max-w-2xl mb-16">
-            <h2 class="text-sm uppercase tracking-[0.4em] text-[#D4AF37] font-bold mb-4">Our Commitment</h2>
-            <p class="text-3xl lg:text-4xl font-light text-black tracking-tight leading-tight">
-                Designed for your <span class="font-serif italic text-black/70">peace of mind</span>, delivered
-                with absolute care.
-            </p>
-        </div>
 
         {{-- Feature Grid --}}
         <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-8">

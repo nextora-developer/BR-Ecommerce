@@ -1,5 +1,5 @@
 <x-app-layout>
-    <div class="bg-[#FAF9F6]">
+    <div class="bg-[#F9F7F2]">
         {{-- Banner Section: Cinematic & Deep --}}
         <section class="w-full relative z-0" data-banner-slider>
             <div class="max-w-7xl5 mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10 pt-5">
@@ -68,11 +68,6 @@
         {{-- Category Section: Boutique Shelf Look --}}
         <section id="categories" class="relative">
             <div class="relative max-w-7xl5 mx-auto px-6 py-6">
-                <div class="flex items-center justify-between mb-12">
-                    <h3 class="text-sm uppercase tracking-[0.4em] text-[#D4AF37] font-bold">
-                        Browse by Category
-                    </h3>
-                </div>
 
                 @if (isset($categories) && $categories->count())
                     <div class="overflow-x-auto scrollbar-hide select-none" data-scroll-x>

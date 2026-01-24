@@ -22,7 +22,7 @@
     </div>
 
 
-    <div class="relative max-w-7xl5 mx-auto px-6 py-20 lg:py-20">
+    <div class="relative max-w-7xl5 mx-auto px-6 py-20 lg:py-16">
         <div
             class="relative overflow-hidden bg-white rounded-[3rem] border border-black/[0.03] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.05)]">
 
@@ -41,10 +41,6 @@
                     <p class="text-4xl md:text-5xl font-light text-black tracking-tight leading-[1.1]">
                         Ready to elevate <br class="hidden md:block" />
                         your <span class="font-serif italic text-black/70">everyday essentials?</span>
-                    </p>
-                    <p class="mt-6 text-base md:text-lg text-black/40 font-medium max-w-lg leading-relaxed">
-                        Join thousands of satisfied clients who choose quality over compromise.
-                        Your premium experience is just a click away.
                     </p>
                 </div>
 
