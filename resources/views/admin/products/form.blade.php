@@ -144,14 +144,15 @@
                 @php
                     // 预设选项（value => label）
                     $highlightOptions = [
-                        'ships_1_3' => 'Ships in 1–3 working days',
-                        'returns_7' => 'Easy returns within 7 days',
-                        'authentic' => '100% Authentic guarantee',
-                        'support' => 'Friendly customer support',
-                        'secure' => 'Secure payment checkout',
-                        'cod' => 'Cash on delivery available',
-                        'pickup' => 'Self-pickup available',
-                        'warranty' => 'Warranty included (if applicable)',
+                        'non_refundable' => 'Non-Refundable',
+                        'secure_checkout' => 'Secure Checkout',
+                        'digital_product' => 'Digital Product',
+                        'limited_deal' => 'Limited-Time Deal',
+                        'best_price' => 'Best Price',
+                        'instant_delivery' => 'Instant Delivery',
+                        'no_shipping' => 'No Shipping Required',
+                        'genuine_code' => 'Genuine Code',
+                        'fraud_protection' => 'Fraud Protection',
                     ];
 
                     // 回填：旧输入优先，否则 product highlights
