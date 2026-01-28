@@ -67,14 +67,14 @@
 
         {{-- Category Section: Boutique Shelf Look --}}
         <section id="categories" class="relative">
-            <div class="relative max-w-7xl5 mx-auto px-6 py-6">
+            <div class="relative mx-auto max-w-7xl5 px-4 sm:px-6 lg:px-8 sm:py-3 lg:py-4">
 
                 @if (isset($categories) && $categories->count())
                     <div class="overflow-x-auto scrollbar-hide select-none" data-scroll-x>
                         <div class="flex gap-3 min-w-max pb-6">
                             @foreach ($categories as $category)
                                 <a href="{{ route('shop.index', ['category' => $category->slug]) }}"
-                                    class="group block w-[110px] sm:w-[130px] lg:w-[140px] text-center">
+                                    class="group block w-[100px] sm:w-[130px] lg:w-[140px] text-center">
 
                                     {{-- Floating Icon Container --}}
                                     <div class="relative mx-auto w-24 h-24 sm:w-28 sm:h-28 mb-4 sm:mb-5">

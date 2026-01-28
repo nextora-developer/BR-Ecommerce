@@ -1,25 +1,13 @@
 {{-- Trust & Value Section --}}
-<section class="relative overflow-hidden bg-[#F9F7F2] py-10 lg:py-14">
-    {{-- Refined Background Elements --}}
-    {{-- <div class="absolute inset-0 pointer-events-none select-none overflow-hidden">
-        <span class="absolute -bottom-10 -right-10 text-[18rem] font-black text-black/[0.02] leading-none uppercase">
-            Trust
-        </span>
+<section class="relative overflow-hidden bg-[#FDFCFB] py-2 lg:py-14">
 
+    {{-- Ambient Background --}}
+    <div class="pointer-events-none absolute inset-0 z-0">
         <div
-            class="absolute top-0 right-0 w-[700px] h-[700px] rounded-full bg-[#D4AF37]/5 blur-[120px] -translate-y-1/2 translate-x-1/3">
+            class="absolute -top-[20%] left-1/2 -translate-x-1/2 w-[1200px] h-[800px] bg-gradient-to-b from-[#D4AF37]/10 to-transparent blur-[120px] rounded-full">
         </div>
-        <div
-            class="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full bg-black/[0.03] blur-[100px] translate-y-1/3 -translate-x-1/4">
-        </div>
-
-        <svg class="absolute top-0 left-0 w-full h-full opacity-[0.05]" viewBox="0 0 100 100" preserveAspectRatio="none">
-            <path d="M0 20 Q 25 10, 50 20 T 100 20" fill="none" stroke="black" stroke-width="0.05" />
-            <path d="M0 50 Q 25 40, 50 50 T 100 50" fill="none" stroke="black" stroke-width="0.05" />
-            <path d="M0 80 Q 25 70, 50 80 T 100 80" fill="none" stroke="black" stroke-width="0.05" />
-        </svg>
-    </div> --}}
-
+    </div>
+    
     <div class="relative max-w-7xl5 mx-auto px-6">
 
         {{-- Feature Grid --}}

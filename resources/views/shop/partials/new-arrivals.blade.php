@@ -1,6 +1,6 @@
 {{-- New Arrivals products --}}
 <section id="new-arrivals" class="bg-[#F3F1EC]">
-    <div class="max-w-7xl5 mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-10">
+    <div class="max-w-7xl5 mx-auto px-4 sm:px-6 lg:px-8 py-5 lg:py-10">
 
         {{-- New Arrivals Header Section --}}
         <div class="flex flex-col sm:flex-row items-baseline justify-between gap-4 mb-10 lg:mb-12">
@@ -16,13 +16,16 @@
             </div>
 
             {{-- Refined CTA Link --}}
+            {{-- ✅ Desktop CTA only --}}
             <a href="{{ route('shop.index') }}"
-                class="group inline-flex items-center text-[11px] font-bold uppercase tracking-[0.2em] text-black hover:text-[#D4AF37] transition-all duration-300">
+                class="hidden sm:inline-flex group items-center text-[11px] font-bold uppercase tracking-[0.2em]
+               text-black hover:text-[#D4AF37] transition-all duration-300">
                 <span class="border-b border-black/10 group-hover:border-[#D4AF37] pb-1">
                     Browse All Products
                 </span>
                 <div
-                    class="ml-3 w-8 h-8 rounded-full border border-black/5 flex items-center justify-center group-hover:bg-black group-hover:text-white transition-all duration-500">
+                    class="ml-3 w-8 h-8 rounded-full border border-black/5 flex items-center justify-center
+                   group-hover:bg-black group-hover:text-white transition-all duration-500">
                     <svg xmlns="http://www.w3.org/2000/svg"
                         class="h-3 w-3 transform group-hover:translate-x-0.5 transition-transform" fill="none"
                         viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
@@ -123,6 +126,25 @@
                         </div>
                     </div>
                 @endforeach
+            </div>
+            {{-- ✅ Mobile CTA (below products, centered) --}}
+            <div class="mt-8 sm:hidden flex justify-center">
+                <a href="{{ route('shop.index') }}"
+                    class="group inline-flex items-center text-[11px] font-bold uppercase tracking-[0.2em]
+               text-black hover:text-[#D4AF37] transition-all duration-300">
+                    <span class="border-b border-black/10 group-hover:border-[#D4AF37] pb-1">
+                        Browse All Products
+                    </span>
+                    <div
+                        class="ml-3 w-8 h-8 rounded-full border border-black/5 flex items-center justify-center
+                   group-hover:bg-black group-hover:text-white transition-all duration-500">
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                            class="h-3 w-3 transform group-hover:translate-x-0.5 transition-transform" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12l-7.5 7.5M21 12H3" />
+                        </svg>
+                    </div>
+                </a>
             </div>
         @else
             {{-- Enhanced Empty State --}}

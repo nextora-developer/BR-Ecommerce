@@ -22,7 +22,7 @@
     </div>
 
 
-    <div class="relative max-w-7xl5 mx-auto px-6 py-20 lg:py-16">
+    <div class="relative max-w-7xl5 mx-auto px-6 py-10 lg:py-16">
         <div
             class="relative overflow-hidden bg-white rounded-[3rem] border border-black/[0.03] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.05)]">
 

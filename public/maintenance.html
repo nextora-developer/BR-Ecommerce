@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scheduled Maintenance | BRIF Cloud</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --gold: #D4AF37;
+            --gold-deep: #8F6A10;
+            --gold-soft: rgba(212, 175, 55, 0.18);
+        }
+
+        body {
+            background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
+            color: #ffffff;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .maintenance-card {
+            background: rgba(255, 255, 255, 0.035);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 2rem;
+            padding: 3rem;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.55);
+        }
+
+        /* Pulse indicator */
+        .status-pulse {
+            width: 12px;
+            height: 12px;
+            background-color: var(--gold);
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 16px rgba(212, 175, 55, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(212, 175, 55, 0);
+            }
+        }
+
+        /* Icon */
+        .cog-icon {
+            font-size: 4rem;
+            background: linear-gradient(135deg, var(--gold), var(--gold-deep));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Progress */
+        .progress {
+            height: 6px;
+            background-color: rgba(255, 255, 255, 0.12);
+            border-radius: 3px;
+            margin: 2rem 0;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, var(--gold), var(--gold-deep));
+        }
+
+        /* Buttons */
+        .btn-whatsapp {
+            background-color: #25D366;
+            color: white;
+            border: none;
+        }
+
+        .btn-whatsapp:hover {
+            background-color: #128C7E;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .btn-outline-light {
+            border-color: rgba(212, 175, 55, 0.55);
+            color: var(--gold);
+        }
+
+        .btn-outline-light:hover {
+            background: rgba(212, 175, 55, 0.12);
+            color: #fff;
+            border-color: var(--gold);
+        }
+
+        .text-primary {
+            color: var(--gold) !important;
+        }
+
+        .tracking-wider {
+            letter-spacing: 0.12em;
+        }
+
+        /* Custom Gold Progress */
+        .progress-wrap {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 999px;
+            overflow: hidden;
+            margin: 2rem 0;
+            position: relative;
+        }
+
+        .progress-gold {
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg,
+                    #8F6A10,
+                    #D4AF37,
+                    #FFE08A,
+                    #D4AF37,
+                    #8F6A10);
+            background-size: 300% 100%;
+            animation: goldFlow 3s linear infinite;
+            box-shadow:
+                0 0 12px rgba(212, 175, 55, 0.55),
+                inset 0 0 6px rgba(255, 255, 255, 0.25);
+        }
+
+        /* Flow animation */
+        @keyframes goldFlow {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            100% {
+                background-position: 300% 50%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="maintenance-card text-center">
+
+        <div class="cog-icon">
+            <i class="fa-solid fa-screwdriver-wrench"></i>
+        </div>
+
+        <div class="d-flex align-items-center justify-content-center mb-3">
+            <span class="status-pulse"></span>
+            <span class="text-primary fw-bold text-uppercase small tracking-wider">
+                System Maintenance
+            </span>
+        </div>
+
+        <h1 class="fw-bold mb-3">We’ll Be Back Shortly</h1>
+
+        <p class="text-white-50 mb-0">
+            We’re currently performing scheduled maintenance to enhance system performance,
+            security and payment reliability.
+        </p>
+
+        <div class="progress-wrap">
+            <div class="progress-gold" style="width: 75%"></div>
+        </div>
+
+        <p class="small text-white-50 mb-4">
+            Orders and payments are temporarily paused to prevent errors.
+        </p>
+
+        <div class="d-flex flex-column flex-sm-row justify-content-center gap-3">
+            <a href="https://wa.me/60123011610" class="btn btn-whatsapp px-4 py-2 rounded-pill">
+                <i class="fa-brands fa-whatsapp me-2"></i> WhatsApp Support
+            </a>
+        </div>
+
+        <footer class="mt-5 pt-4 border-top border-secondary border-opacity-25">
+            <p class="small text-white-50 mb-0">
+                © 2026 Br Innovate Future. All systems operational shortly.
+            </p>
+        </footer>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
