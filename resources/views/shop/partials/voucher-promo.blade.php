@@ -77,7 +77,7 @@
                         {{-- Perforated Divider (Mobile: left/right notches, Desktop: top/bottom notches) --}}
                         <div
                             class="relative w-full sm:w-16 h-10 sm:h-auto
-                                    bg-transparent sm:bg-white
+                                    bg-white sm:bg-white
                                     border-y border-black/[0.06] sm:border-y sm:border-x-0
                                     flex items-center sm:flex-col sm:justify-between
                                 overflow-hidden">

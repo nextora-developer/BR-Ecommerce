@@ -207,7 +207,7 @@
                 </div>
 
                 <div class="mt-8">
-                    {{ $products->withQueryString()->links() }}
+                    {{ $products->links() }}
                 </div>
             @else
                 {{-- Empty State (match featured style) --}}

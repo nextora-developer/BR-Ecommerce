@@ -104,7 +104,10 @@ class ShopController extends Controller
                 $query->latest();
         }
 
-        $products = $query->paginate(15)->withQueryString();
+        $products = $query
+            ->paginate(15)
+            ->onEachSide(2)
+            ->withQueryString();
 
         $categories = Category::where('is_active', true)
             ->whereNull('parent_id')

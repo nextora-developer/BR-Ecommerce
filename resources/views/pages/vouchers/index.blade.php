@@ -5,14 +5,14 @@
             {{-- Page Header --}}
             <div class="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 class="text-sm uppercase tracking-[0.3em] text-[#D4AF37] font-bold mb-3">Exclusive Access</h1>
-                    <p class="text-4xl font-light text-black tracking-tight">
-                        Voucher <span class="font-serif italic">Privileges</span>
-                    </p>
+                    <span class="text-xs uppercase tracking-[0.5em] text-[#D4AF37] font-bold mb-4 block">Exclusive
+                        Privileges</span>
+                    <h2 class="text-3xl md:text-4xl font-serif text-black leading-tight">Vouchers</h2>
                     <p class="mt-2 text-sm text-black/45 max-w-xl">
                         Copy a code and apply it during checkout. Limited releases rotate frequently.
                     </p>
                 </div>
+
 
                 {{-- Search --}}
                 <form method="GET" action="{{ route('vouchers.index') }}" class="w-full md:w-[360px]">
@@ -57,7 +57,7 @@
                 </div>
 
                 <div class="relative z-10 px-6 py-8">
-                    <div class="h-px bg-gradient-to-r from-transparent via-black/10 to-transparent mb-8"></div>
+                    {{-- <div class="h-px bg-gradient-to-r from-transparent via-black/10 to-transparent mb-8"></div> --}}
 
                     @if ($vouchers->count())
                         <div class="grid grid-cols-1 xl:grid-cols-2 gap-10">
@@ -139,7 +139,7 @@
                                     {{-- Perforated Divider (跟参考那段一样) --}}
                                     <div
                                         class="relative w-full sm:w-16 h-10 sm:h-auto
-                                               bg-transparent sm:bg-white
+                                               bg-white sm:bg-white
                                                border-y border-black/[0.06] sm:border-y sm:border-x-0
                                                flex items-center sm:flex-col sm:justify-between overflow-hidden">
 
