@@ -12,7 +12,7 @@
     $inactiveClass = 'text-gray-600 hover:bg-gray-50 hover:text-black';
 @endphp
 
-<div class="bg-white rounded-[2rem] border border-gray-100 shadow-sm flex flex-col sticky top-28 overflow-hidden">
+<div class="bg-white rounded-[2rem] border border-gray-100 shadow-sm flex flex-col sticky top-48 overflow-hidden">
 
     {{-- Top User Info: Concierge Style --}}
     <div

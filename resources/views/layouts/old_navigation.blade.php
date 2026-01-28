@@ -1,170 +1,158 @@
-<nav class="sticky top-0 z-50 border-b border-white/10 bg-black backdrop-blur-md">
+<nav class="sticky top-0 z-50 border-b border-white/10 bg-black/95 backdrop-blur-md">
     <div class="max-w-7xl5 mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-20">
 
-        {{-- =========================
-            MOBILE (md以下) - 你原本那段 그대로，不动
-        ========================== --}}
-        <div class="md:hidden">
-            <div class="flex justify-between h-20">
+            {{-- Left side: Logo + Desktop Links --}}
+            <div class="flex items-center">
+                <div class="shrink-0 flex items-center">
+                    <a href="{{ route('home') }}" class="group flex items-center gap-3">
+                        <img src="{{ asset('images/logo.png') }}" alt="BR Store"
+                            class="h-10 w-10 rounded-2xl object-cover shadow-lg shadow-[#D4AF37]/20 group-hover:scale-105 transition-transform" />
 
-                {{-- Left side: Logo + (Desktop nav hidden anyway) --}}
-                <div class="flex items-center">
-                    {{-- <div class="shrink-0 flex items-center">
-                        <a href="{{ route('home') }}" class="group flex items-center gap-3">
-                            <img src="{{ asset('images/logo.png') }}" alt="BR Store"
-                                class="h-10 w-10 rounded-2xl object-cover transition-transform" />
-
-                            <span
-                                class="text-xl font-bold tracking-tight text-white group-hover:text-[#D4AF37] transition-colors">
-                                BRIF.MY
-                            </span>
-                        </a>
-                    </div> --}}
-                    <div class="shrink-0 flex items-center">
-                        <a href="{{ route('home') }}" class="group flex items-center">
-                            <img src="{{ asset('images/logo-full.png') }}" alt="BRIF"
-                                class="h-10 lg:h-12 object-contain opacity-90 group-hover:opacity-100 transition" />
-                        </a>
-                    </div>
-
-                </div>
-
-                {{-- Right: Actions (mobile) --}}
-                <div class="flex items-center gap-2 sm:gap-4">
-
-                    {{-- 🔍 Mobile Search Button --}}
-                    <button type="button" onclick="toggleMobileSearch(true)"
-                        class="group relative p-2 text-gray-300 hover:text-white hover:bg-white/10 rounded-full transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor" stroke-width="1.8">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="m21 21-4.35-4.35M11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14z" />
-                        </svg>
-                    </button>
-
-                    {{-- Cart --}}
-                    <a href="{{ route('cart.index') }}"
-                        class="group relative p-2 text-gray-300 hover:text-white hover:bg-white/10 rounded-full transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24"
-                            stroke-width="1.8" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
-                        </svg>
-
-                        <span data-cart-count
-                            class="absolute top-0 right-0 h-5 w-5 bg-[#D4AF37] text-black text-[10px] font-bold flex items-center justify-center rounded-full ring-2 ring-black">
-                            {{ auth()->user()?->cart?->items?->count() ?? 0 }}
+                        <span
+                            class="text-xl font-bold tracking-tight text-white group-hover:text-[#D4AF37] transition-colors">
+                            BRIF.MY
                         </span>
                     </a>
+                </div>
 
-                    {{-- Desktop User (mobile你原本是 hidden sm:block，这里保持你现状：手机不显示用户dropdown) --}}
+                {{-- Desktop nav --}}
+                <div class="hidden lg:flex items-center ms-10 space-x-1">
+                    @php
+                        $baseClass = 'px-4 py-2 text-base font-semibold transition-all duration-200 rounded-xl';
+                        $activeClass = 'text-[#D4AF37] bg-[#D4AF37]/10';
+                        $inactiveClass = 'text-gray-300 hover:text-white hover:bg-white/10';
+                    @endphp
+
+                    <a href="{{ route('home') }}"
+                        class="{{ $baseClass }} {{ request()->routeIs('home') ? $activeClass : $inactiveClass }}">
+                        Home
+                    </a>
+
+                    <a href="{{ route('shop.index') }}"
+                        class="{{ $baseClass }} {{ request()->routeIs('shop.*') ? $activeClass : $inactiveClass }}">
+                        Shop
+                    </a>
+
+                    <a href="https://brif.cloud/" target="_blank" rel="noopener noreferrer"
+                        class="{{ $baseClass }} {{ $inactiveClass }} hover:text-[#D4AF37]">
+                        Official Site
+                    </a>
+
+                    {{-- More Dropdown (Desktop) --}}
+                    <div x-data="{ openMore: false }" class="relative">
+                        <button @click="openMore = !openMore" @click.outside="openMore = false"
+                            class="{{ $baseClass }} {{ $inactiveClass }} flex items-center gap-1">
+                            <span>More</span>
+                            <svg class="h-4 w-4 transition-transform" :class="{ 'rotate-180': openMore }" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                            </svg>
+                        </button>
+
+                        <div x-cloak x-show="openMore" x-transition:enter="transition ease-out duration-100"
+                            x-transition:enter-start="opacity-0 scale-95"
+                            class="absolute left-0 mt-2 w-48 rounded-2xl border border-white/10 bg-black/95 backdrop-blur shadow-xl ring-1 ring-black/40 z-50 overflow-hidden">
+                            <div class="p-1.5">
+                                <a href="{{ route('reward-point') }}"
+                                    class="block px-4 py-2.5 text-sm text-gray-300 hover:bg-white/10 hover:text-[#D4AF37] rounded-xl transition">
+                                    Reward Point
+                                </a>
+                                <a href="{{ route('vouchers.index') }}"
+                                    class="block px-4 py-2.5 text-sm text-gray-300 hover:bg-white/10 hover:text-[#D4AF37] rounded-xl transition">
+                                    Voucher
+                                </a>
+                                <a href="{{ route('agents.index') }}"
+                                    class="block px-4 py-2.5 text-sm text-gray-300 hover:bg-white/10 hover:text-[#D4AF37] rounded-xl transition">
+                                    Verify Agent
+                                </a>
+                                <a href="{{ route('guideline') }}"
+                                    class="block px-4 py-2.5 text-sm text-gray-300 hover:bg-white/10 hover:text-[#D4AF37] rounded-xl transition">
+                                    Guideline
+                                </a>
+                                <a href="{{ route('faq') }}"
+                                    class="block px-4 py-2.5 text-sm text-gray-300 hover:bg-white/10 hover:text-[#D4AF37] rounded-xl transition">
+                                    FAQ
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        {{-- =========================
-            DESKTOP (md以上) - Nextora 类似结构（黑金主题）
-        ========================== --}}
-        @php
-            $linkBase = 'px-4 py-2 rounded-xl text-[13px] font-semibold tracking-wide transition';
-            $linkActive = 'text-[#D4AF37]';
-            $linkInactive = 'text-gray-300 hover:text-white';
-        @endphp
+            {{-- Center: Search Bar (Desktop) --}}
+            <div class="hidden md:flex flex-1 items-center justify-center px-8 lg:px-20">
+                <form method="GET" action="{{ route('shop.index') }}" class="w-full max-w-lg">
+                    <div class="relative group">
+                        <input type="text" name="q" value="{{ request('q') }}"
+                            placeholder="Search products..."
+                            class="w-full bg-white/10 text-white placeholder-gray-400 border border-white/10 rounded-full px-6 py-2.5 text-sm focus:ring-2 focus:ring-[#D4AF37]/30 focus:bg-black transition-all">
+                        <button type="submit"
+                            class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-[#D4AF37] transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="m21 21-4.35-4.35M11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14z" />
+                            </svg>
+                        </button>
+                    </div>
+                </form>
+            </div>
 
-        <div class="hidden md:block">
+            {{-- Right: Actions --}}
+            <div class="flex items-center gap-2 sm:gap-4">
 
-            {{-- Row 1: left icons | center brand | right actions --}}
-            <div class="h-24 flex items-center justify-between">
+                {{-- 🔍 Mobile Search Button --}}
+                <button type="button" onclick="toggleMobileSearch(true)"
+                    class="md:hidden group relative p-2 text-gray-300 hover:text-white hover:bg-white/10 rounded-full transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="m21 21-4.35-4.35M11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14z" />
+                    </svg>
+                </button>
 
-                {{-- Left: Search icon --}}
-                <div class="hidden md:flex items-center">
-                    <form method="GET" action="{{ route('shop.index') }}">
-                        <div class="relative group">
+                {{-- Cart --}}
+                <a href="{{ route('cart.index') }}"
+                    class="group relative p-2 text-gray-300 hover:text-white hover:bg-white/10 rounded-full transition">
+                    {{-- <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                    </svg> --}}
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24"
+                        stroke-width="1.8" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
+                    </svg>
 
-                            <input type="text" name="q" value="{{ request('q') }}" placeholder="Search"
-                                class="
-                                w-36 lg:w-44
-                                bg-white/10 text-white placeholder-gray-400
-                                border border-white/10
-                                rounded-full
-                                pl-4 pr-9 py-2
-                                text-sm
-                                transition-all duration-200
-                                focus:w-56 lg:focus:w-64
-                                focus:bg-black
-                                focus:border-[#D4AF37]/40
-                                focus:ring-2 focus:ring-[#D4AF37]/20
-                                outline-none
-                                " />
+                    <span data-cart-count
+                        class="absolute top-0 right-0 h-5 w-5 bg-[#D4AF37] text-black text-[10px] font-bold flex items-center justify-center rounded-full ring-2 ring-black">
+                        {{ auth()->user()?->cart?->items?->count() ?? 0 }}
+                    </span>
+                </a>
 
-                            {{-- Search button (真正可点) --}}
-                            <button type="submit"
-                                class="absolute right-3 top-1/2 -translate-y-1/2
-                       text-gray-400 hover:text-[#D4AF37] transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
-                                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="m21 21-4.35-4.35M11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14z" />
-                                </svg>
-                            </button>
-
-                        </div>
-                    </form>
-                </div>
-
-
-                {{-- Center: Brand (big) + tagline --}}
-                <div class="flex-1 flex flex-col items-center justify-center text-center">
-                    <a href="{{ route('home') }}" class="group">
-                        {{-- <div class="flex items-center gap-3 justify-center"> <img src="{{ asset('images/logo.png') }}"
-                                alt="BRIF"
-                                class="h-9 w-9 rounded-2xl object-cover opacity-90 group-hover:opacity-100 transition" />
-                            <span class="text-3xl font-black tracking-[0.12em] text-[#D4AF37] drop-shadow-sm"> BRIF.MY
-                            </span> </div> --}}
-
-                        <div class="flex items-center justify-center">
-                            <img src="{{ asset('images/logo-full.png') }}" alt="BRIF"
-                                class="h-10 lg:h-16 object-contain opacity-90 hover:opacity-100 transition" />
-                        </div>
-
-                        {{-- <div class="mt-1 text-[11px] uppercase tracking-[0.35em] text-gray-400">
-                            Premium Essentials, Curated for You
-                        </div> --}}
-                    </a>
-                </div>
-
-                {{-- Right: Cart | User (保持你原本风格) --}}
-                <div class="flex items-center gap-3">
-
-                    {{-- Cart --}}
-                    <a href="{{ route('cart.index') }}"
-                        class="group relative p-2 text-gray-300 hover:text-white hover:bg-white/10 rounded-full transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24"
-                            stroke-width="1.8" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
-                        </svg>
-
-                        <span data-cart-count
-                            class="absolute -top-0.5 -right-0.5 h-5 w-5 bg-[#D4AF37] text-black text-[10px] font-bold flex items-center justify-center rounded-full ring-2 ring-black">
-                            {{ auth()->user()?->cart?->items?->count() ?? 0 }}
-                        </span>
-                    </a>
-
-                    {{-- User --}}
-                    @auth
+                {{-- Desktop User --}}
+                @auth
+                    <div class="hidden sm:block">
                         <div x-data="{ openUser: false }" class="relative">
                             <button type="button" @click="openUser = !openUser" @click.outside="openUser = false"
-                                class="flex items-center gap-2 pl-1 pr-3 py-1.5 rounded-full border border-white/10 hover:bg-white/10 transition">
+                                @keydown.escape.window="openUser = false"
+                                class="flex items-center gap-2 p-1 pr-3 rounded-full border border-white/10 hover:bg-white/10 transition">
                                 <div
-                                    class="h-8 w-8 rounded-full bg-[#D4AF37] text-black flex items-center justify-center text-[11px] font-bold uppercase">
+                                    class="h-8 w-8 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#8f6a10]
+                                    flex items-center justify-center text-[11px] font-bold text-black uppercase">
                                     {{ substr(Auth::user()->name, 0, 1) }}
                                 </div>
-                                <span class="text-sm font-semibold text-gray-200 max-w-[140px] truncate">
+
+                                <span class="text-base font-semibold text-gray-200 max-w-[100px] truncate">
                                     {{ Auth::user()->name }}
                                 </span>
-                                <svg class="h-4 w-4 text-gray-300 transition-transform" :class="{ 'rotate-180': openUser }"
-                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+
+                                <svg class="h-4 w-4 text-gray-300 transition-transform duration-200"
+                                    :class="{ 'rotate-180': openUser }" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                                 </svg>
@@ -238,96 +226,17 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    @else
-                        <a href="{{ route('login') }}"
-                            class="px-6 py-2.5 rounded-full bg-[#D4AF37] text-black text-sm font-bold hover:bg-[#e5c55a] transition shadow-lg shadow-[#D4AF37]/20">
-                            Login
-                        </a>
-                    @endauth
 
-                </div>
-            </div>
-
-            {{-- Soft divider (不要像你之前那条白线那么抢) --}}
-            <div class="h-px bg-white/10"></div>
-
-            {{-- Row 2: Nav links centered (像你参考图) --}}
-            <div class="py-3">
-                <div class="flex items-center justify-center gap-2">
-
-                    <a href="{{ route('home') }}"
-                        class="{{ $linkBase }} {{ request()->routeIs('home') ? $linkActive : $linkInactive }}">
-                        HOME
-                    </a>
-
-                    <a href="{{ route('shop.index') }}"
-                        class="{{ $linkBase }} {{ request()->routeIs('shop.*') ? $linkActive : $linkInactive }}">
-                        SHOP
-                    </a>
-
-                    <a href="https://brif.cloud/" target="_blank" rel="noopener noreferrer"
-                        class="{{ $linkBase }} {{ $linkInactive }}">
-                        OFFICIAL SITE
-                    </a>
-
-                    <a href="{{ route('reward-point') }}"
-                        class="{{ $linkBase }} {{ request()->routeIs('reward-point') ? $linkActive : $linkInactive }}">
-                        REWARD POINT
-                    </a>
-
-                    <a href="{{ route('vouchers.index') }}"
-                        class="{{ $linkBase }} {{ request()->routeIs('vouchers.*') ? $linkActive : $linkInactive }}">
-                        VOUCHER
-                    </a>
-
-                    <a href="{{ route('agents.index') }}"
-                        class="{{ $linkBase }} {{ request()->routeIs('agents.*') ? $linkActive : $linkInactive }}">
-                        VERIFY AGENT
-                    </a>
-
-                    {{-- More --}}
-                    <div x-data="{ openMore: false }" class="relative">
-                        <button @click="openMore = !openMore" @click.outside="openMore = false"
-                            class="{{ $linkBase }} {{ $linkInactive }} flex items-center gap-1">
-                            MORE
-                            <svg class="h-4 w-4 transition-transform" :class="{ 'rotate-180': openMore }"
-                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                            </svg>
-                        </button>
-
-                        <div x-cloak x-show="openMore"
-                            class="absolute left-0 mt-2 w-56 rounded-2xl border border-white/10 bg-black/95 backdrop-blur shadow-xl ring-1 ring-black/40 overflow-hidden z-50">
-                            <div class="p-1.5">
-                                {{-- <a href="{{ route('reward-point') }}"
-                                    class="block px-4 py-2.5 text-sm text-gray-300 hover:bg-white/10 hover:text-[#D4AF37] rounded-xl transition">
-                                    Reward Point
-                                </a>
-                                <a href="{{ route('vouchers.index') }}"
-                                    class="block px-4 py-2.5 text-sm text-gray-300 hover:bg-white/10 hover:text-[#D4AF37] rounded-xl transition">
-                                    Voucher
-                                </a>
-                                <a href="{{ route('agents.index') }}"
-                                    class="block px-4 py-2.5 text-sm text-gray-300 hover:bg-white/10 hover:text-[#D4AF37] rounded-xl transition">
-                                    Verify Agent
-                                </a> --}}
-                                <a href="{{ route('guideline') }}"
-                                    class="block px-4 py-2.5 text-sm text-gray-300 hover:bg-white/10 hover:text-[#D4AF37] rounded-xl transition">
-                                    Guideline
-                                </a>
-                                <a href="{{ route('faq') }}"
-                                    class="block px-4 py-2.5 text-sm text-gray-300 hover:bg-white/10 hover:text-[#D4AF37] rounded-xl transition">
-                                    FAQ
-                                </a>
-                            </div>
                         </div>
                     </div>
+                @else
+                    <a href="{{ route('login') }}"
+                        class="hidden sm:inline-flex px-6 py-2.5 rounded-full bg-[#D4AF37] text-black text-sm font-bold hover:bg-[#e5c55a] transition shadow-lg shadow-[#D4AF37]/20">
+                        Login
+                    </a>
+                @endauth
 
-                </div>
             </div>
-
         </div>
     </div>
 </nav>
@@ -682,21 +591,21 @@
                                     stroke-width="1.5" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0
-                                                                                                                                                                   a1.724 1.724 0 002.573 1.066
-                                                                                                                                                                   c1.543-.94 3.31.826 2.37 2.37
-                                                                                                                                                                   a1.724 1.724 0 001.065 2.572
-                                                                                                                                                                   c1.756.426 1.756 2.924 0 3.35
-                                                                                                                                                                   a1.724 1.724 0 00-1.066 2.573
-                                                                                                                                                                   c.94 1.543-.826 3.31-2.37 2.37
-                                                                                                                                                                   a1.724 1.724 0 00-2.572 1.065
-                                                                                                                                                                   c-.426 1.756-2.924 1.756-3.35 0
-                                                                                                                                                                   a1.724 1.724 0 00-2.573-1.066
-                                                                                                                                                                   c-1.543.94-3.31-.826-2.37-2.37
-                                                                                                                                                                   a1.724 1.724 0 00-1.065-2.572
-                                                                                                                                                                   c-1.756-.426-1.756-2.924 0-3.35
-                                                                                                                                                                   a1.724 1.724 0 001.066-2.573
-                                                                                                                                                                   c-.94-1.543.826-3.31 2.37-2.37
-                                                                                                                                                                   a1.724 1.724 0 002.572-1.065z" />
+                                                                                                                                       a1.724 1.724 0 002.573 1.066
+                                                                                                                                       c1.543-.94 3.31.826 2.37 2.37
+                                                                                                                                       a1.724 1.724 0 001.065 2.572
+                                                                                                                                       c1.756.426 1.756 2.924 0 3.35
+                                                                                                                                       a1.724 1.724 0 00-1.066 2.573
+                                                                                                                                       c.94 1.543-.826 3.31-2.37 2.37
+                                                                                                                                       a1.724 1.724 0 00-2.572 1.065
+                                                                                                                                       c-.426 1.756-2.924 1.756-3.35 0
+                                                                                                                                       a1.724 1.724 0 00-2.573-1.066
+                                                                                                                                       c-1.543.94-3.31-.826-2.37-2.37
+                                                                                                                                       a1.724 1.724 0 00-1.065-2.572
+                                                                                                                                       c-1.756-.426-1.756-2.924 0-3.35
+                                                                                                                                       a1.724 1.724 0 001.066-2.573
+                                                                                                                                       c-.94-1.543.826-3.31 2.37-2.37
+                                                                                                                                       a1.724 1.724 0 002.572-1.065z" />
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                 </svg>

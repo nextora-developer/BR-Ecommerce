@@ -18,7 +18,7 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
 
                 {{-- Left: Sidebar Help --}}
-                <div class="space-y-6 lg:sticky lg:top-24 h-fit">
+                <div class="space-y-6 lg:sticky lg:top-48 h-fit">
 
                     {{-- Content --}}
                     <div class="bg-white rounded-3xl p-6 text-gray-900 shadow-sm border border-gray-100">

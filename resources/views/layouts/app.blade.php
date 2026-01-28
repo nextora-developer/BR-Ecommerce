@@ -62,15 +62,17 @@
 
                 {{-- Brand --}}
                 <div class="lg:col-span-4">
-                    <div class="flex items-center gap-3 mb-6">
-                        <img src="{{ asset('images/logo.png') }}" alt="BR Store"
-                            class="h-10 w-10 rounded-2xl object-cover shadow-lg shadow-[#D4AF37]/20" />
-
-                        <div class="flex flex-col leading-tight">
-                            <span class="text-xl font-bold tracking-tight text-white">BRIF.MY</span>
-                            <span class="text-xs text-gray-400 tracking-wide">Premium Essentials</span>
-                        </div>
+                    {{-- <div class="flex items-center gap-3 mb-6"> <img src="{{ asset('images/logo.png') }}" alt="BR Store"
+                            class="h-10 w-10 rounded-2xl object-cover" />
+                        <div class="flex flex-col leading-tight"> <span
+                                class="text-xl font-bold tracking-tight text-white">BRIF.MY</span> <span
+                                class="text-xs text-gray-400 tracking-wide">Premium Essentials</span> </div>
+                    </div> --}}
+                    <div class="flex items-center mb-6">
+                        <img src="{{ asset('images/logo-full.png') }}" alt="BRIF"
+                            class="h-12 object-contain opacity-90 hover:opacity-100 transition" />
                     </div>
+
 
                     <p class="text-sm text-gray-300 leading-relaxed max-w-sm">
                         Curating high-quality essentials for the modern Malaysian lifestyle.

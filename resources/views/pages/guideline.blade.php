@@ -23,7 +23,7 @@
             <div class="grid grid-cols-1 lg:grid-cols-4 gap-12 items-start">
 
                 {{-- Left Navigation --}}
-                <aside class="lg:col-span-1 lg:sticky lg:top-32">
+                <aside class="lg:col-span-1 lg:sticky lg:top-48">
                     <nav class="space-y-2" id="guide-nav">
                         @php
                             $menus = [
