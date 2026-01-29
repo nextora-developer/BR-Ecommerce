@@ -4,7 +4,7 @@
         <div
             class="relative rounded-[40px] bg-white/80 backdrop-blur-2xl
                     shadow-[0_40px_100px_-15px_rgba(0,0,0,0.15)] 
-                    overflow-hidden max-h-[min(720px,calc(100svh-100px))]">
+                    overflow-hidden lg:max-h-[min(720px,calc(100svh-100px))]">
 
             <div class="h-full grid grid-cols-1 lg:grid-cols-12 gap-0 items-stretch overflow-hidden rounded-[32px]">
 
