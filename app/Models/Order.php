@@ -82,4 +82,16 @@ class Order extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public const REVENUE_STATUSES = [
+        'paid',
+        'processing',
+        'shipped',
+        'completed',
+    ];
+
+    public function scopeRevenue($query)
+    {
+        return $query->whereIn('status', self::REVENUE_STATUSES);
+    }
 }
